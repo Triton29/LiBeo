@@ -34,19 +34,15 @@ namespace LiBeo
             SQLiteCommand cmd = new SQLiteCommand(conn);
 
             // create a table if it does not exist
-            cmd.CommandText = "CREATE TABLE IF NOT EXISTS folders (name varchar(255), id INTEGER PRIMARY KEY AUTOINCREMENT, parent_id int)";
+            cmd.CommandText = "CREATE TABLE IF NOT EXISTS folders (name varchar(255), id INTEGER PRIMARY KEY AUTOINCREMENT, parent_id int, UNIQUE(name, parent_id))";
             cmd.ExecuteNonQuery();
 
-            // clear the table
-            cmd.CommandText = "DELETE FROM folders";
-            cmd.ExecuteNonQuery();
-
-            // reset autoincrement for id
+            // reset auto increment
             cmd.CommandText = "DELETE FROM sqlite_sequence WHERE name='folders'";
             cmd.ExecuteNonQuery();
 
             // insert the root folder
-            cmd.CommandText = "INSERT INTO folders (name) VALUES ('root')";
+            cmd.CommandText = "INSERT OR IGNORE INTO folders (name, parent_id) VALUES ('root', 0)";
             cmd.ExecuteNonQuery();
 
             InsertChildFolders(cmd, RootFolder, 1);
@@ -63,7 +59,7 @@ namespace LiBeo
             foreach(Outlook.Folder folder in parentFolder.Folders)
             {
                 // insert folder
-                cmd.CommandText = "INSERT INTO folders (name, parent_id) VALUES (@name, @parent_id)";
+                cmd.CommandText = "INSERT OR IGNORE INTO folders (name, parent_id) VALUES (@name, @parent_id) ";
                 cmd.Parameters.AddWithValue("@name", folder.Name);
                 cmd.Parameters.AddWithValue("@parent_id", parentId);
                 cmd.Prepare();
@@ -78,6 +74,10 @@ namespace LiBeo
                 dataReader.Read();
                 int id = dataReader.GetInt32(0);
                 dataReader.Close();
+
+                // reset auto increment
+                cmd.CommandText = "DELETE FROM sqlite_sequence WHERE name='folders'";
+                cmd.ExecuteNonQuery();
 
                 // revise all for the child folder
                 InsertChildFolders(cmd, folder, id);
