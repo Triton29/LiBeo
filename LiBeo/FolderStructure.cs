@@ -34,18 +34,28 @@ namespace LiBeo
             SQLiteCommand cmd = new SQLiteCommand(conn);
 
             // create a table if it does not exist
-            cmd.CommandText = "CREATE TABLE IF NOT EXISTS folders (name varchar(255), id INTEGER PRIMARY KEY AUTOINCREMENT, parent_id int, UNIQUE(name, parent_id))";
+            cmd.CommandText = 
+                "CREATE TABLE IF NOT EXISTS folders (" +
+                "name varchar(255), id INTEGER PRIMARY KEY AUTOINCREMENT, parent_id int, got_deleted bit, UNIQUE(name, parent_id))";
             cmd.ExecuteNonQuery();
 
-            // reset auto increment
-            cmd.CommandText = "DELETE FROM sqlite_sequence WHERE name='folders'";
+            // prepare for delete check
+            cmd.CommandText = "UPDATE folders SET got_deleted=1";
             cmd.ExecuteNonQuery();
 
             // insert the root folder
-            cmd.CommandText = "INSERT OR IGNORE INTO folders (name, parent_id) VALUES ('root', 0)";
+            cmd.CommandText = "INSERT OR IGNORE INTO folders (name, parent_id, got_deleted) VALUES ('root', 0, 0)";
+            cmd.ExecuteNonQuery();
+
+            // root folder cannot be deleted
+            cmd.CommandText = "UPDATE folders SET got_deleted=0 WHERE id=1";
             cmd.ExecuteNonQuery();
 
             InsertChildFolders(cmd, RootFolder, 1);
+
+            // delete all deleted folders
+            cmd.CommandText = "DELETE FROM folders WHERE got_deleted=1";
+            cmd.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -58,14 +68,14 @@ namespace LiBeo
         {
             foreach(Outlook.Folder folder in parentFolder.Folders)
             {
-                // insert folder
-                cmd.CommandText = "INSERT OR IGNORE INTO folders (name, parent_id) VALUES (@name, @parent_id) ";
+                // insert folder if not already inserted
+                cmd.CommandText = "INSERT OR IGNORE INTO folders (name, parent_id, got_deleted) VALUES (@name, @parent_id, 0) ";
                 cmd.Parameters.AddWithValue("@name", folder.Name);
                 cmd.Parameters.AddWithValue("@parent_id", parentId);
                 cmd.Prepare();
                 cmd.ExecuteNonQuery();
 
-                // get autoincrement id from current folder
+                // get autoincremented id from current folder
                 cmd.CommandText = "SELECT id FROM folders WHERE name=@name AND parent_id=@parent_id";
                 cmd.Parameters.AddWithValue("@name", folder.Name);
                 cmd.Parameters.AddWithValue("@parent_id", parentId);
@@ -74,6 +84,12 @@ namespace LiBeo
                 dataReader.Read();
                 int id = dataReader.GetInt32(0);
                 dataReader.Close();
+
+                // confirm that folder did not get deleted
+                cmd.CommandText = "UPDATE folders SET got_deleted=0 WHERE id=@id";
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.Prepare();
+                cmd.ExecuteNonQuery();
 
                 // reset auto increment
                 cmd.CommandText = "DELETE FROM sqlite_sequence WHERE name='folders'";
