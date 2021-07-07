@@ -15,9 +15,10 @@ namespace LiBeo
 {
     public partial class ThisAddIn
     {
+        public static string version = "0.1 (Alpha)";
+
         public static Outlook.Folder rootFolder { get; set; }
         public static string dbName = @"\data.db";
-
 
         /// <summary>
         /// Create the Ribbon

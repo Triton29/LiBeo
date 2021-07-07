@@ -33,6 +33,7 @@ namespace LiBeo
             dbConn.Open();
             FolderStructure folderStructure = new FolderStructure(rootFolder);
             folderStructure.DisplayInTreeView(dbConn, folderExplorer);
+            dbConn.Close();
         }
 
         /// <summary>
@@ -40,7 +41,21 @@ namespace LiBeo
         /// </summary>
         private void OK_Button_Click(object sender, RoutedEventArgs e)
         {
+            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + AppDomain.CurrentDomain.BaseDirectory + ThisAddIn.dbName);
+            dbConn.Open();
+            int id = (int)((TreeViewItem)folderExplorer.SelectedItem).Tag;
+            List<string> path = FolderStructure.GetPath(dbConn, id);
+            Outlook.Folder currentFolder = rootFolder;
+            foreach(string folder in path)
+            {
+                currentFolder = (Outlook.Folder) currentFolder.Folders[folder];
+            }
+            foreach(Outlook.MailItem mail in ThisAddIn.GetSelectedMails())
+            {
+                mail.Move(currentFolder);
+            }
 
+            dbConn.Close();
             this.Close();
         }
 

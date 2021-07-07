@@ -115,7 +115,7 @@ namespace LiBeo
 
             while (dataReader.Read())
             {
-                TreeViewItem item = new TreeViewItem() { Header = dataReader.GetString(0) };
+                TreeViewItem item = new TreeViewItem() { Header = dataReader.GetString(0), Tag = dataReader.GetInt32(1) };
                 treeView.Items.Add(item);
                 AddChildItems(conn, item, dataReader.GetInt32(1));
             }
@@ -138,11 +138,40 @@ namespace LiBeo
 
             while (dataReader.Read())
             {
-                TreeViewItem childItem = new TreeViewItem() { Header = dataReader.GetString(0) };
+                TreeViewItem childItem = new TreeViewItem() { Header = dataReader.GetString(0), Tag = dataReader.GetInt32(1) };
                 parentItem.Items.Add(childItem);
                 AddChildItems(conn, childItem, dataReader.GetInt32(1));
             }
             dataReader.Close();
+        }
+
+        /// <summary>
+        /// Gets the path of a folder in a folder structure saved in a database
+        /// </summary>
+        /// <param name="conn">SQLite database connection</param>
+        /// <param name="folderId">The id of the folder in the database</param>
+        /// <returns>The path of the folder in a list</returns>
+        public static List<string> GetPath(SQLiteConnection conn, int folderId)
+        {
+            List<string> path = new List<string>();
+            int parentId = folderId;
+            SQLiteCommand cmd = new SQLiteCommand(conn);
+
+            while (parentId != 1)
+            {
+                cmd.CommandText = "SELECT name, parent_id FROM folders WHERE id=@id";
+                cmd.Parameters.AddWithValue("@id", parentId);
+                cmd.Prepare();
+                SQLiteDataReader dataReader = cmd.ExecuteReader();
+                dataReader.Read();
+
+                path.Insert(0, dataReader.GetString(0));
+                parentId = dataReader.GetInt32(1);
+
+                dataReader.Close();
+            }
+
+            return path;
         }
     }
 }

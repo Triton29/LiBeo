@@ -23,6 +23,8 @@ namespace LiBeo
         public AddInInfo()
         {
             InitializeComponent();
+
+            versionLabel.Content = "LiBeo Version " + ThisAddIn.version;
         }
     }
 }

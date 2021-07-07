@@ -14,14 +14,15 @@
             <RowDefinition Height="2*" />
             <RowDefinition Height="1*" />
         </Grid.RowDefinitions>
-        <Label Grid.Row="0" 
+        <Label x:Name="versionLabel"
+               Grid.Row="0" 
                FontSize="24" 
                FontWeight="Bold" 
                HorizontalAlignment="Center"
                VerticalAlignment="Center"
                BorderThickness="0 0 0 1"
                BorderBrush="Blue"
-               Margin="50">LiBeo Version 0.1 (Alpha)</Label>
+               Margin="50" />
         <Label Grid.Row="1" 
                FontSize="16"
                HorizontalAlignment="Center"
