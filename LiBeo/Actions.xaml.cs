@@ -24,10 +24,15 @@ namespace LiBeo
     /// </summary>
     public partial class Actions : Window
     {
-        private Outlook.Folder root = ThisAddIn.rootFolder;
+        private Outlook.Folder rootFolder = ThisAddIn.rootFolder;
         public Actions()
         {
             InitializeComponent();
+
+            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + AppDomain.CurrentDomain.BaseDirectory + ThisAddIn.dbName);
+            dbConn.Open();
+            FolderStructure folderStructure = new FolderStructure(rootFolder);
+            folderStructure.DisplayInTreeView(dbConn, folderExplorer);
         }
 
         /// <summary>

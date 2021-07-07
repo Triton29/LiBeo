@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Data.SQLite;
+using System.Windows;
+using System.Windows.Controls;
 using Office = Microsoft.Office.Core;
 using Outlook = Microsoft.Office.Interop.Outlook;
 
@@ -28,7 +30,7 @@ namespace LiBeo
         /// <summary>
         /// Saves the folder structure to a database
         /// </summary>
-        /// <param name="conn">The SQLite connection to the database</param>
+        /// <param name="conn">The SQLite database connection</param>
         public void SaveToDB(SQLiteConnection conn)
         {
             SQLiteCommand cmd = new SQLiteCommand(conn);
@@ -98,6 +100,49 @@ namespace LiBeo
                 // revise all for the child folder
                 InsertChildFolders(cmd, folder, id);
             }
+        }
+
+        /// <summary>
+        /// Displays the folder structure from a database in a tree view
+        /// </summary>
+        /// <param name="conn">The SQLite database connection</param>
+        /// <param name="treeView">The treeview in which the structure will be displayed</param>
+        public void DisplayInTreeView(SQLiteConnection conn, TreeView treeView)
+        {
+            SQLiteCommand cmd = new SQLiteCommand(conn);
+            cmd.CommandText = "SELECT * FROM folders WHERE parent_id=1";
+            SQLiteDataReader dataReader = cmd.ExecuteReader();
+
+            while (dataReader.Read())
+            {
+                TreeViewItem item = new TreeViewItem() { Header = dataReader.GetString(0) };
+                treeView.Items.Add(item);
+                AddChildItems(conn, item, dataReader.GetInt32(1));
+            }
+            dataReader.Close();
+        }
+
+        /// <summary>
+        /// Adds child folders from a parent folder from a database to a treeview; recursive function
+        /// </summary>
+        /// <param name="conn">The SQLite database connection</param>
+        /// <param name="parentItem">The parent-TreeViewItem from the child folders</param>
+        /// <param name="parentId">The id from the parent folder in the database</param>
+        private void AddChildItems(SQLiteConnection conn, TreeViewItem parentItem, int parentId)
+        {
+            SQLiteCommand cmd = new SQLiteCommand(conn);
+            cmd.CommandText = "SELECT * FROM folders WHERE parent_id=@id";
+            cmd.Parameters.AddWithValue("@id", parentId);
+            cmd.Prepare();
+            SQLiteDataReader dataReader = cmd.ExecuteReader();
+
+            while (dataReader.Read())
+            {
+                TreeViewItem childItem = new TreeViewItem() { Header = dataReader.GetString(0) };
+                parentItem.Items.Add(childItem);
+                AddChildItems(conn, childItem, dataReader.GetInt32(1));
+            }
+            dataReader.Close();
         }
     }
 }
