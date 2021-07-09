@@ -4,21 +4,32 @@
 		<tabs>
 			<tab id="LiBeoTab"
 			   label="LiBeo">
-				<group id="ActionsGroup"
-					   label="Aktionen">
-					<button id="AutoMove"
-							label="Automatisch verschieben"
+				<group id="FastActionsGroup"
+					   label="Schnell-Aktionen">
+					<button id="AutoSort"
+							label="Automatisch einsortieren"
 							size="large"
 							onAction="Actions"/>
-					<button id="ManualMove"
-							label="Manuell verschieben"
+					<button id="ManualSort"
+							label="Manuell einsortieren"
 							size="large"/>
 					<button id="CreateDir"
-							label="Ordner erstellen und verschieben"
+							label="Ordner erstellen und einsortieren"
 							size="large"/>
 				</group>
+				<group id="OtherActionsGroup"
+					   label="Andere Aktionen">
+					<button id="SyncDatabase"
+							label="Datenbank synchronisieren"
+							size="large"
+							onAction="SyncDatabase"/>
+				</group>
 				<group id="InfoGroup"
-						 label="Hilfe">
+						 label="Einstellungen">
+					<button id="Settings"
+							label="Add-In Einstellungen"
+							size="large"
+							onAction="AddInSettings"/>
 					<button id="Info"
 							label="Add-In Info"
 							size="large"

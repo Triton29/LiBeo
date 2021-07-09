@@ -24,15 +24,14 @@ namespace LiBeo
     /// </summary>
     public partial class Actions : Window
     {
-        private Outlook.Folder rootFolder = ThisAddIn.rootFolder;
+        private Outlook.Folder rootFolder = ThisAddIn.RootFolder;
         public Actions()
         {
             InitializeComponent();
 
-            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + AppDomain.CurrentDomain.BaseDirectory + ThisAddIn.dbName);
+            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + ThisAddIn.DbName);
             dbConn.Open();
-            FolderStructure folderStructure = new FolderStructure(rootFolder);
-            folderStructure.DisplayInTreeView(dbConn, folderExplorer);
+            ThisAddIn.Structure.DisplayInTreeView(dbConn, folderExplorer);
             dbConn.Close();
         }
 
@@ -41,7 +40,7 @@ namespace LiBeo
         /// </summary>
         private void OK_Button_Click(object sender, RoutedEventArgs e)
         {
-            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + AppDomain.CurrentDomain.BaseDirectory + ThisAddIn.dbName);
+            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + ThisAddIn.DbName);
             dbConn.Open();
             int id = (int)((TreeViewItem)folderExplorer.SelectedItem).Tag;
             List<string> path = FolderStructure.GetPath(dbConn, id);

@@ -16,15 +16,13 @@ using System.Windows.Shapes;
 namespace LiBeo
 {
     /// <summary>
-    /// Interaction logic for AddInInfo.xaml
+    /// Interaction logic for WaitWindow.xaml
     /// </summary>
-    public partial class AddInInfo : Window
+    public partial class WaitWindow : Window
     {
-        public AddInInfo()
+        public WaitWindow()
         {
             InitializeComponent();
-
-            versionLabel.Content = "LiBeo Version " + ThisAddIn.Version;
         }
     }
 }

@@ -15,10 +15,11 @@ namespace LiBeo
 {
     public partial class ThisAddIn
     {
-        public static string version = "0.1 (Alpha)";
+        public static string Version = "0.1 (Alpha)";
+        public static string DbName = AppDomain.CurrentDomain.BaseDirectory + @"\data.db";
 
-        public static Outlook.Folder rootFolder { get; set; }
-        public static string dbName = @"\data.db";
+        public static Outlook.Folder RootFolder { get; set; }
+        public static FolderStructure Structure { get; set; }
 
         /// <summary>
         /// Create the Ribbon
@@ -30,17 +31,29 @@ namespace LiBeo
 
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
-            rootFolder = (Outlook.Folder) this.Application.ActiveExplorer().Session.DefaultStore.GetRootFolder();
+            // initialize properties
+            RootFolder = (Outlook.Folder) this.Application.ActiveExplorer().Session.DefaultStore.GetRootFolder();
+            Structure = new FolderStructure(RootFolder);
 
-            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + AppDomain.CurrentDomain.BaseDirectory + dbName);
-            dbConn.Open();
-            FolderStructure folderStructure = new FolderStructure(rootFolder);
-            folderStructure.SaveToDB(dbConn);
+            // syncronize database if enabled
+            if(Properties.Settings.Default.SyncDBOnStartup)
+                SyncDatabase();
         }
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
         {
             
+        }
+
+        /// <summary>
+        /// Synchronizes the database where the folder structure is saved with the current folder structure
+        /// </summary>
+        public static void SyncDatabase()
+        {
+            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + DbName);
+            dbConn.Open();
+            Structure.SaveToDB(dbConn);
+            dbConn.Close();
         }
 
         /// <summary>

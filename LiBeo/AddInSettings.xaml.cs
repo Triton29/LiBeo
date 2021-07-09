@@ -16,15 +16,22 @@ using System.Windows.Shapes;
 namespace LiBeo
 {
     /// <summary>
-    /// Interaction logic for AddInInfo.xaml
+    /// Interaction logic for AddInSettings.xaml
     /// </summary>
-    public partial class AddInInfo : Window
+    public partial class AddInSettings : Window
     {
-        public AddInInfo()
+        public AddInSettings()
         {
             InitializeComponent();
 
-            versionLabel.Content = "LiBeo Version " + ThisAddIn.Version;
+            syncDBCheckBox.IsChecked = Properties.Settings.Default.SyncDBOnStartup;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.SyncDBOnStartup = (bool)syncDBCheckBox.IsChecked;
+            Properties.Settings.Default.Save();
+            this.Close();
         }
     }
 }

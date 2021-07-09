@@ -14,7 +14,7 @@ namespace LiBeo
     /// <summary>
     /// Represents a folder structure
     /// </summary>
-    class FolderStructure
+    public class FolderStructure
     {
         public Outlook.Folder RootFolder { get; set; }
 

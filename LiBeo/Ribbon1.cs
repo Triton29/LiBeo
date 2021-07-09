@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Data.SQLite;
 using Office = Microsoft.Office.Core;
 using Outlook = Microsoft.Office.Interop.Outlook;
 
@@ -38,6 +39,26 @@ namespace LiBeo
         {
             Actions actionsForm = new Actions();
             actionsForm.Show();
+        }
+
+        /// <summary>
+        /// Synchronizes the database where the folder structure is saved with the current folder structure
+        /// </summary>
+        /// <param name="control">The button which calls this function</param>
+        public void SyncDatabase(Office.IRibbonControl control)
+        {
+            WaitWindow waitWindow = new WaitWindow();
+            waitWindow.Show();
+
+            ThisAddIn.SyncDatabase();
+
+            waitWindow.Close();
+        }
+
+        public void AddInSettings(Office.IRibbonControl control)
+        {
+            AddInSettings settingsWindow = new AddInSettings();
+            settingsWindow.Show();
         }
 
         #region IRibbonExtensibility Members
