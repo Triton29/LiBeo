@@ -26,12 +26,24 @@ namespace LiBeo.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool SyncDBOnStartup {
+        public bool SyncFolderStructureOnStartup {
             get {
-                return ((bool)(this["SyncDBOnStartup"]));
+                return ((bool)(this["SyncFolderStructureOnStartup"]));
             }
             set {
-                this["SyncDBOnStartup"] = value;
+                this["SyncFolderStructureOnStartup"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SyncedStopWords {
+            get {
+                return ((bool)(this["SyncedStopWords"]));
+            }
+            set {
+                this["SyncedStopWords"] = value;
             }
         }
     }

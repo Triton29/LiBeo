@@ -36,9 +36,19 @@ namespace LiBeo
             RootFolder = (Outlook.Folder) this.Application.ActiveExplorer().Session.DefaultStore.GetRootFolder();
             Structure = new FolderStructure(RootFolder);
 
-            // syncronize database if enabled
-            if(Properties.Settings.Default.SyncDBOnStartup)
+            // synchronize folder structure if enabled
+            if(Properties.Settings.Default.SyncFolderStructureOnStartup)
                 SyncFolderStructure();
+
+            // synchronizes stop words if not done yet
+            if (!Properties.Settings.Default.SyncedStopWords)
+            {
+                WaitWindow waitWindow = new WaitWindow();
+                waitWindow.Show();
+                SyncStopWords();
+                Properties.Settings.Default.SyncedStopWords = true;
+                Properties.Settings.Default.Save();
+            }
         }
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)

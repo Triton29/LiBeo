@@ -24,7 +24,7 @@ namespace LiBeo
         {
             InitializeComponent();
 
-            syncDBCheckBox.IsChecked = Properties.Settings.Default.SyncDBOnStartup;
+            syncDBCheckBox.IsChecked = Properties.Settings.Default.SyncFolderStructureOnStartup;
         }
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace LiBeo
         /// </summary>
         private void OKButton_Click(object sender, RoutedEventArgs e)
         {
-            Properties.Settings.Default.SyncDBOnStartup = (bool)syncDBCheckBox.IsChecked;
+            Properties.Settings.Default.SyncFolderStructureOnStartup = (bool)syncDBCheckBox.IsChecked;
             Properties.Settings.Default.Save();
             this.Close();
         }
