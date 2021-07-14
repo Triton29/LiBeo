@@ -16,7 +16,8 @@ namespace LiBeo
     public partial class ThisAddIn
     {
         public static string Version = "0.1 (Alpha)";
-        public static string DbName = AppDomain.CurrentDomain.BaseDirectory + @"\data.db";
+        public static string DbPath = AppDomain.CurrentDomain.BaseDirectory + @"\data.db";
+        public static string StopWordsPath = AppDomain.CurrentDomain.BaseDirectory + @"\stop_words.txt";
 
         public static Outlook.Folder RootFolder { get; set; }
         public static FolderStructure Structure { get; set; }
@@ -37,7 +38,7 @@ namespace LiBeo
 
             // syncronize database if enabled
             if(Properties.Settings.Default.SyncDBOnStartup)
-                SyncDatabase();
+                SyncFolderStructure();
         }
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
@@ -48,11 +49,34 @@ namespace LiBeo
         /// <summary>
         /// Synchronizes the database where the folder structure is saved with the current folder structure
         /// </summary>
-        public static void SyncDatabase()
+        public static void SyncFolderStructure()
         {
-            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + DbName);
+            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + DbPath);
             dbConn.Open();
             Structure.SaveToDB(dbConn);
+            dbConn.Close();
+        }
+
+        /// <summary>
+        /// Synchronizes the database with the stop words list (stop_words.txt)
+        /// </summary>
+        public static void SyncStopWords()
+        {
+            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + DbPath);
+            dbConn.Open();
+            SQLiteCommand dbCmd = new SQLiteCommand(dbConn);
+            dbCmd.CommandText = "CREATE TABLE IF NOT EXISTS stop_words (word varchar(255) UNIQUE)";
+            dbCmd.ExecuteNonQuery();
+
+            System.IO.StreamReader file = new System.IO.StreamReader(StopWordsPath);
+            string line;
+            while((line = file.ReadLine()) != null){
+                dbCmd.CommandText = "INSERT OR IGNORE INTO stop_words VALUES (@word)";
+                dbCmd.Parameters.AddWithValue("@word", line);
+                dbCmd.Prepare();
+                dbCmd.ExecuteNonQuery();
+            }
+
             dbConn.Close();
         }
 

@@ -9,20 +9,26 @@
 					<button id="AutoSort"
 							label="Automatisch einsortieren"
 							size="large"
-							onAction="Actions"/>
+							onAction="AutoSort_Click"/>
 					<button id="ManualSort"
 							label="Manuell einsortieren"
-							size="large"/>
+							size="large"
+							onAction="ManualSort_Click"/>
 					<button id="CreateDir"
 							label="Ordner erstellen und einsortieren"
-							size="large"/>
+							size="large"
+							onAction="CreateDir_Click"/>
 				</group>
 				<group id="OtherActionsGroup"
 					   label="Andere Aktionen">
-					<button id="SyncDatabase"
-							label="Datenbank synchronisieren"
+					<button id="SyncFolderStructure"
+							label="Ordnerstruktur synchronisieren"
 							size="large"
-							onAction="SyncDatabase"/>
+							onAction="SyncFolderStructure"/>
+					<button id="SyncStopWords"
+							label="Stop Words synchronisieren"
+							size="large"
+							onAction="SyncStopWords"/>
 				</group>
 				<group id="InfoGroup"
 						 label="Einstellungen">

@@ -17,9 +17,15 @@
         </StackPanel>
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Right">
-            <Button Click="Button_Click"
-                    Width="80">
+            <Button Click="OKButton_Click"
+                    Width="80"
+                    Margin="5 0">
                 Übernehmen
+            </Button>
+            <Button Click="CancelButton_Click"
+                    Width="80"
+                    Margin="5 0">
+                Abbrechen
             </Button>
         </StackPanel>
     </StackPanel>

@@ -27,10 +27,21 @@ namespace LiBeo
             syncDBCheckBox.IsChecked = Properties.Settings.Default.SyncDBOnStartup;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Called when ok button is pressed; saves all settings
+        /// </summary>
+        private void OKButton_Click(object sender, RoutedEventArgs e)
         {
             Properties.Settings.Default.SyncDBOnStartup = (bool)syncDBCheckBox.IsChecked;
             Properties.Settings.Default.Save();
+            this.Close();
+        }
+
+        /// <summary>
+        /// Called when cancel button is pressed; closes the window
+        /// </summary>
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
             this.Close();
         }
     }

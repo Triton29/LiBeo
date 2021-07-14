@@ -5,17 +5,38 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
         xmlns:local="clr-namespace:LiBeo"
         mc:Ignorable="d" 
-        d:DesignHeight="450" d:DesignWidth="800"
+        Width="500" SizeToContent="Height"
         Title="E-Mail(s) einsortieren"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         KeyDown="Window_KeyDown">
-    <Grid HorizontalAlignment="Center"
-          VerticalAlignment="Center">
-        <StackPanel>
-            <TreeView x:Name="folderExplorer" />
-            <Button Click="OK_Button_Click"
-                    x:Name="okButton">OK</Button>
+    <StackPanel Margin="10">
+        <TabControl x:Name="tabConrol">
+            <TabItem Header="Automatisch einsortieren">
+                
+            </TabItem>
+            <TabItem Header="Manuell einsortieren">
+                <StackPanel>
+                    <TreeView x:Name="folderExplorer" 
+                              Height="300"
+                              BorderThickness="0"/>
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Ordner erstellen und einsortieren">
+                
+            </TabItem>
+        </TabControl>
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0 10 0 0">
+            <Button x:Name="okButton"
+                    Click="OKButton_Click"
+                    Width="80"
+                    Margin="5 0">OK</Button>
+            <Button x:Name="cancelButton"
+                    Click="cancelButton_Click"
+                    Width="80"
+                    Margin="5 0">Abbrechen</Button>
         </StackPanel>
-    </Grid>
+    </StackPanel>
 </Window>

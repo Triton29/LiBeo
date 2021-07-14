@@ -29,7 +29,7 @@ namespace LiBeo
         {
             InitializeComponent();
 
-            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + ThisAddIn.DbName);
+            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + ThisAddIn.DbPath);
             dbConn.Open();
             ThisAddIn.Structure.DisplayInTreeView(dbConn, folderExplorer);
             dbConn.Close();
@@ -38,9 +38,9 @@ namespace LiBeo
         /// <summary>
         /// Called when OK-button is clicked; moves mail(s) to folder, selected in TreeView
         /// </summary>
-        private void OK_Button_Click(object sender, RoutedEventArgs e)
+        private void OKButton_Click(object sender, RoutedEventArgs e)
         {
-            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + ThisAddIn.DbName);
+            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + ThisAddIn.DbPath);
             dbConn.Open();
             int id = (int)((TreeViewItem)folderExplorer.SelectedItem).Tag;
             List<string> path = FolderStructure.GetPath(dbConn, id);
@@ -67,6 +67,14 @@ namespace LiBeo
             {
                 okButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             }
+        }
+
+        /// <summary>
+        /// Called when cancel button is pressed; closes the window
+        /// </summary>
+        private void cancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
         }
     }
 }

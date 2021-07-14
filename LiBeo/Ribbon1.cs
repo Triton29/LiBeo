@@ -22,6 +22,80 @@ namespace LiBeo
         }
 
         /// <summary>
+        /// Creates a window with the sort-actions for the selected mails
+        /// </summary>
+        /// <param name="control">The button which calls this function</param>
+        public void AutoSort_Click(Office.IRibbonControl control)
+        {
+            Actions actionsForm = new Actions();
+            actionsForm.Show();
+            // select auto sort tab
+            actionsForm.tabConrol.SelectedIndex = 0;
+        }
+
+        /// <summary>
+        /// Creates a window with the sort-actions for the selected mails
+        /// </summary>
+        /// <param name="control">The button which calls this function</param>
+        public void ManualSort_Click(Office.IRibbonControl control)
+        {
+            Actions actionsForm = new Actions();
+            actionsForm.Show();
+            // select manual sort tab
+            actionsForm.tabConrol.SelectedIndex = 1;
+        }
+
+        /// <summary>
+        /// Creates a window with the sort-actions for the selected mails
+        /// </summary>
+        /// <param name="control">The button which calls this function</param>
+        public void CreateDir_Click(Office.IRibbonControl control)
+        {
+            Actions actionsForm = new Actions();
+            actionsForm.Show();
+            // select create directory tab
+            actionsForm.tabConrol.SelectedIndex = 2;
+        }
+
+        /// <summary>
+        /// Synchronizes the database where the folder structure is saved with the current folder structure
+        /// </summary>
+        /// <param name="control">The button which calls this function</param>
+        public void SyncFolderStructure(Office.IRibbonControl control)
+        {
+            WaitWindow waitWindow = new WaitWindow();
+            waitWindow.Show();
+
+            ThisAddIn.SyncFolderStructure();
+
+            waitWindow.Close();
+        }
+
+        /// <summary>
+        /// Synchronizes the database with the stop words list (stop_words.txt)
+        /// </summary>
+        /// <param name="control"></param>
+        public void SyncStopWords(Office.IRibbonControl control)
+        {
+            WaitWindow waitWindow = new WaitWindow();
+            waitWindow.Show();
+
+            ThisAddIn.SyncStopWords();
+
+            waitWindow.Close();
+        }
+
+        /// <summary>
+        /// Creates a window with settings for this Add-In
+        /// </summary>
+        /// <param name="control">The button which calls this function</param>
+        public void AddInSettings(Office.IRibbonControl control)
+        {
+            AddInSettings settingsWindow = new AddInSettings();
+            settingsWindow.Show();
+        }
+
+        /// <summary>
         /// Creates a window with info for this Add-In
         /// </summary>
         /// <param name="control">The button which calls this function</param>
@@ -29,36 +103,6 @@ namespace LiBeo
         {
             AddInInfo infoForm = new AddInInfo();
             infoForm.Show();
-        }
-
-        /// <summary>
-        /// Creates a window with the sort-actions for the selected mails
-        /// </summary>
-        /// <param name="control">The button which calls this function</param>
-        public void Actions(Office.IRibbonControl control)
-        {
-            Actions actionsForm = new Actions();
-            actionsForm.Show();
-        }
-
-        /// <summary>
-        /// Synchronizes the database where the folder structure is saved with the current folder structure
-        /// </summary>
-        /// <param name="control">The button which calls this function</param>
-        public void SyncDatabase(Office.IRibbonControl control)
-        {
-            WaitWindow waitWindow = new WaitWindow();
-            waitWindow.Show();
-
-            ThisAddIn.SyncDatabase();
-
-            waitWindow.Close();
-        }
-
-        public void AddInSettings(Office.IRibbonControl control)
-        {
-            AddInSettings settingsWindow = new AddInSettings();
-            settingsWindow.Show();
         }
 
         #region IRibbonExtensibility Members
