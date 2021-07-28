@@ -12,47 +12,29 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using Office = Microsoft.Office.Core;
-using System.Data.SQLite;
-using Outlook = Microsoft.Office.Interop.Outlook;
-
 
 namespace LiBeo
 {
     /// <summary>
-    /// Interaction logic for Actions.xaml
+    /// Interaction logic for SelectFolder.xaml
     /// </summary>
-    public partial class Actions : Window
+    public partial class SelectFolder : Window
     {
-        private Outlook.Folder rootFolder = ThisAddIn.RootFolder;
-        public Actions()
+        public List<string> SelectedFolderPath;
+        public bool Canceled = false;
+
+        public SelectFolder()
         {
             InitializeComponent();
 
+            // display folder structure in tree view
             ThisAddIn.DbConn.Open();
             ThisAddIn.Structure.DisplayInTreeView(ThisAddIn.DbConn, folderExplorer);
             ThisAddIn.DbConn.Close();
         }
 
-        /// <summary>
-        /// Called when OK-button is clicked; moves mail(s) to folder, selected in TreeView
-        /// </summary>
-        private void OKButton_Click(object sender, RoutedEventArgs e)
+        private void okButton_Click(object sender, RoutedEventArgs e)
         {
-            ThisAddIn.DbConn.Open();
-            int id = (int)((TreeViewItem)folderExplorer.SelectedItem).Tag;
-            List<string> path = FolderStructure.GetPath(ThisAddIn.DbConn, id);
-            Outlook.Folder currentFolder = rootFolder;
-            foreach(string folder in path)
-            {
-                currentFolder = (Outlook.Folder) currentFolder.Folders[folder];
-            }
-            foreach(Outlook.MailItem mail in ThisAddIn.GetSelectedMails())
-            {
-                mail.Move(currentFolder);
-            }
-
-            ThisAddIn.DbConn.Close();
             this.Close();
         }
 
@@ -61,7 +43,7 @@ namespace LiBeo
         /// </summary>
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-            if(e.Key == Key.Enter)
+            if (e.Key == Key.Enter)
             {
                 okButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             }
@@ -72,7 +54,20 @@ namespace LiBeo
         /// </summary>
         private void cancelButton_Click(object sender, RoutedEventArgs e)
         {
+            Canceled = true;
             this.Close();
+        }
+
+        /// <summary>
+        /// Called when the selected item in the folder explorer treeview has changed; 
+        /// writes the currently selected folder in the public variable
+        /// </summary>
+        private void folderExplorer_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            ThisAddIn.DbConn.Open();
+            int id = (int)((TreeViewItem)folderExplorer.SelectedItem).Tag;
+            SelectedFolderPath = FolderStructure.GetPath(ThisAddIn.DbConn, id);
+            ThisAddIn.DbConn.Close();
         }
     }
 }

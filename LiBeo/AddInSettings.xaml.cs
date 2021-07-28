@@ -24,7 +24,15 @@ namespace LiBeo
         {
             InitializeComponent();
 
+            // display current settings
             syncDBCheckBox.IsChecked = Properties.Settings.Default.SyncFolderStructureOnStartup;
+            trayPathInput.Text = Properties.Settings.Default.TrayPath;
+
+            // add images
+            trayPathButton.Content = new Image
+            {
+                Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\img\folder.png"))
+            };
         }
 
         /// <summary>
@@ -43,6 +51,22 @@ namespace LiBeo
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
+        }
+
+        private void trayPathButton_Click(object sender, RoutedEventArgs e)
+        {
+            SelectFolder selectFolderWindow = new SelectFolder();
+            if(selectFolderWindow.ShowDialog() == false && !selectFolderWindow.Canceled)
+            {
+                string trayPath = "";
+                foreach(string folder in selectFolderWindow.SelectedFolderPath)
+                {
+                    trayPath = trayPath + @"\" + folder;
+                }
+                trayPathInput.Text = trayPath;
+                Properties.Settings.Default.TrayPath = trayPath;
+                Properties.Settings.Default.Save();
+            }
         }
     }
 }

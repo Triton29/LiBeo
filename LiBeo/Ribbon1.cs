@@ -19,6 +19,7 @@ namespace LiBeo
 
         public Ribbon1()
         {
+            
         }
 
         /// <summary>
@@ -55,6 +56,15 @@ namespace LiBeo
             actionsForm.Show();
             // select create directory tab
             actionsForm.tabConrol.SelectedIndex = 2;
+        }
+
+        /// <summary>
+        /// Moves the selected mails to the tray
+        /// </summary>
+        /// <param name="control">The button which calls this function</param>
+        public void MoveToTray_Click(Office.IRibbonControl control)
+        {
+            
         }
 
         /// <summary>

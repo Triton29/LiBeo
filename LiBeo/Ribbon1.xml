@@ -18,6 +18,10 @@
 							label="Ordner erstellen und einsortieren"
 							size="large"
 							onAction="CreateDir_Click"/>
+					<button id="MoveToTray"
+							label="In Ablage verschieben"
+							size="large"
+							onAction="MoveToTray_Click"/>
 				</group>
 				<group id="OtherActionsGroup"
 					   label="Andere Aktionen">

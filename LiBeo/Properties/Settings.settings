@@ -6,7 +6,10 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="SyncedStopWords" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="TrayPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">\Ablage</Value>
     </Setting>
   </Settings>
 </SettingsFile>

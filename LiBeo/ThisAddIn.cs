@@ -21,6 +21,7 @@ namespace LiBeo
 
         public static Outlook.Folder RootFolder { get; set; }
         public static FolderStructure Structure { get; set; }
+        public static SQLiteConnection DbConn { get; set; }
 
         /// <summary>
         /// Create the Ribbon
@@ -35,16 +36,15 @@ namespace LiBeo
             // initialize properties
             RootFolder = (Outlook.Folder) this.Application.ActiveExplorer().Session.DefaultStore.GetRootFolder();
             Structure = new FolderStructure(RootFolder);
+            DbConn = new SQLiteConnection("Data Source=" + DbPath);
 
             // synchronize folder structure if enabled
-            if(Properties.Settings.Default.SyncFolderStructureOnStartup)
+            if (Properties.Settings.Default.SyncFolderStructureOnStartup)
                 SyncFolderStructure();
 
             // synchronizes stop words if not done yet
             if (!Properties.Settings.Default.SyncedStopWords)
             {
-                WaitWindow waitWindow = new WaitWindow();
-                waitWindow.Show();
                 SyncStopWords();
                 Properties.Settings.Default.SyncedStopWords = true;
                 Properties.Settings.Default.Save();
@@ -61,10 +61,9 @@ namespace LiBeo
         /// </summary>
         public static void SyncFolderStructure()
         {
-            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + DbPath);
-            dbConn.Open();
-            Structure.SaveToDB(dbConn);
-            dbConn.Close();
+            DbConn.Open();
+            Structure.SaveToDB(DbConn);
+            DbConn.Close();
         }
 
         /// <summary>
@@ -72,9 +71,8 @@ namespace LiBeo
         /// </summary>
         public static void SyncStopWords()
         {
-            SQLiteConnection dbConn = new SQLiteConnection("Data Source=" + DbPath);
-            dbConn.Open();
-            SQLiteCommand dbCmd = new SQLiteCommand(dbConn);
+            DbConn.Open();
+            SQLiteCommand dbCmd = new SQLiteCommand(DbConn);
             dbCmd.CommandText = "CREATE TABLE IF NOT EXISTS stop_words (word varchar(255) UNIQUE)";
             dbCmd.ExecuteNonQuery();
 
@@ -87,7 +85,15 @@ namespace LiBeo
                 dbCmd.ExecuteNonQuery();
             }
 
-            dbConn.Close();
+            DbConn.Close();
+        }
+
+        /// <summary>
+        /// Moves the selected mails to a user-defined tray
+        /// </summary>
+        public static void MoveToTray()
+        {
+
         }
 
         /// <summary>
