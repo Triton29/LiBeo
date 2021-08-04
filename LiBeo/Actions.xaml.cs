@@ -74,5 +74,105 @@ namespace LiBeo
         {
             this.Close();
         }
+
+        /// <summary>
+        /// Called when the user selects another tab; calls the MoveToTray method when the 4th tab is selected
+        /// </summary>
+        private void tabConrol_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if(tabConrol.SelectedIndex == 3)
+            {
+                MoveToTray();
+                this.Close();
+            }
+        }
+
+        /// <summary>
+        /// Moves the selected mails to a user-defined tray
+        /// </summary>
+        public static void MoveToTray()
+        {
+            string outgoingFolder = "Gesendet";
+            string incomingFolder = "Empfangen";
+
+            Outlook.Folder trayFolder;
+            try     // check if tray path exists
+            {
+                trayFolder = ThisAddIn.GetFolderFromPath(Properties.Settings.Default.TrayPath);
+            }
+            catch
+            {
+                MessageBox.Show("Der Ablage-Ordner exestiert nicht! Ändern Sie ihn in den Add-In-Einstellungen.", 
+                    "Ablage-Ordner nicht gefunden", 
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
+            Outlook.Folder currentFolder = trayFolder;
+            foreach(Outlook.MailItem mail in ThisAddIn.GetSelectedMails())
+            {
+                if(mail.SenderEmailAddress.ToLower() == ThisAddIn.EmailAddress.ToLower() &&
+                    mail.SenderEmailAddress.ToLower() != mail.Recipients[1].Address.ToLower())   // if mail is outgoing
+                {
+                    if(IsInFolder(currentFolder, mail.CreationTime.Year.ToString()))
+                        currentFolder = (Outlook.Folder)currentFolder.Folders[mail.CreationTime.Year.ToString()];
+                    else
+                        currentFolder = (Outlook.Folder)currentFolder.Folders.Add(mail.CreationTime.Year.ToString());
+
+                    if (IsInFolder(currentFolder, outgoingFolder))
+                        currentFolder = (Outlook.Folder)currentFolder.Folders[outgoingFolder];
+                    else
+                        currentFolder = (Outlook.Folder)currentFolder.Folders.Add(outgoingFolder);
+
+                    try
+                    {
+                        mail.Move(currentFolder);
+                    }
+                    catch
+                    {
+                        return;
+                    }
+                }
+                else    // if mail is incoming
+                {
+                    if (IsInFolder(currentFolder, mail.ReceivedTime.Year.ToString()))
+                        currentFolder = (Outlook.Folder)currentFolder.Folders[mail.ReceivedTime.Year.ToString()];
+                    else
+                        currentFolder = (Outlook.Folder)currentFolder.Folders.Add(mail.ReceivedTime.Year.ToString());
+
+                    if (IsInFolder(currentFolder, incomingFolder))
+                        currentFolder = (Outlook.Folder)currentFolder.Folders[incomingFolder];
+                    else
+                        currentFolder = (Outlook.Folder)currentFolder.Folders.Add(incomingFolder);
+
+                    try
+                    {
+                        mail.Move(currentFolder);
+                    }
+                    catch
+                    {
+                        return;
+                    }
+                }
+                currentFolder = trayFolder;
+            }
+        }
+
+        /// <summary>
+        /// Checks if a subfolder in an outlook folder exists
+        /// </summary>
+        /// <param name="folder">The parent folder</param>
+        /// <param name="subFolderToCheck">The name of the subfolder to check</param>
+        /// <returns>true if subfolder exists; false if not</returns>
+        public static bool IsInFolder(Outlook.Folder folder, string subFolderToCheck)
+        {
+            foreach(Outlook.Folder f in folder.Folders)
+            {
+                if (f.Name == subFolderToCheck)
+                    return true;
+            }
+            return false;
+        }
     }
 }

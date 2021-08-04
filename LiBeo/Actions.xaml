@@ -5,13 +5,14 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
         xmlns:local="clr-namespace:LiBeo"
         mc:Ignorable="d" 
-        Width="500" SizeToContent="Height"
+        SizeToContent="WidthAndHeight"
         Title="E-Mail(s) einsortieren"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         KeyDown="Window_KeyDown">
     <StackPanel Margin="10">
-        <TabControl x:Name="tabConrol">
+        <TabControl x:Name="tabConrol"
+                    SelectionChanged="tabConrol_SelectionChanged">
             <TabItem Header="Automatisch einsortieren">
                 
             </TabItem>
@@ -25,6 +26,7 @@
             <TabItem Header="Ordner erstellen und einsortieren">
                 
             </TabItem>
+            <TabItem Header="In Ablage verschieben"/>
         </TabControl>
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Right"

@@ -9,29 +9,31 @@
 					<button id="AutoSort"
 							label="Automatisch einsortieren"
 							size="large"
-							onAction="AutoSort_Click"/>
+							onAction="AutoSort_Click"
+							imageMso="SortSelectionMenu"/>
 					<button id="ManualSort"
 							label="Manuell einsortieren"
 							size="large"
-							onAction="ManualSort_Click"/>
+							onAction="ManualSort_Click"
+							imageMso="GroupSortFilter"/>
 					<button id="CreateDir"
 							label="Ordner erstellen und einsortieren"
 							size="large"
-							onAction="CreateDir_Click"/>
+							onAction="CreateDir_Click"
+							imageMso="Folder"/>
 					<button id="MoveToTray"
 							label="In Ablage verschieben"
 							size="large"
-							onAction="MoveToTray_Click"/>
+							onAction="MoveToTray_Click"
+							imageMso="MoveToFolderFileMenu"/>
 				</group>
 				<group id="OtherActionsGroup"
 					   label="Andere Aktionen">
 					<button id="SyncFolderStructure"
 							label="Ordnerstruktur synchronisieren"
-							size="large"
 							onAction="SyncFolderStructure"/>
 					<button id="SyncStopWords"
 							label="Stop Words synchronisieren"
-							size="large"
 							onAction="SyncStopWords"/>
 				</group>
 				<group id="InfoGroup"
@@ -39,11 +41,13 @@
 					<button id="Settings"
 							label="Add-In Einstellungen"
 							size="large"
-							onAction="AddInSettings"/>
+							onAction="AddInSettings"
+							imageMso="ControlToolboxOutlook"/>
 					<button id="Info"
 							label="Add-In Info"
 							size="large"
-							onAction="AddInInfo"/>
+							onAction="AddInInfo"
+							imageMso="Info"/>
 				</group>
 			</tab>
 		</tabs>

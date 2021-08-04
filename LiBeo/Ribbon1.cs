@@ -64,7 +64,7 @@ namespace LiBeo
         /// <param name="control">The button which calls this function</param>
         public void MoveToTray_Click(Office.IRibbonControl control)
         {
-            
+            Actions.MoveToTray();
         }
 
         /// <summary>

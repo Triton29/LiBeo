@@ -21,11 +21,13 @@ namespace LiBeo
     public partial class SelectFolder : Window
     {
         public List<string> SelectedFolderPath;
-        public bool Canceled = false;
+        public bool Canceled = true;
 
         public SelectFolder()
         {
             InitializeComponent();
+
+            SelectedFolderPath = new List<string>();
 
             // display folder structure in tree view
             ThisAddIn.DbConn.Open();
@@ -35,6 +37,7 @@ namespace LiBeo
 
         private void okButton_Click(object sender, RoutedEventArgs e)
         {
+            Canceled = false;
             this.Close();
         }
 
@@ -54,7 +57,6 @@ namespace LiBeo
         /// </summary>
         private void cancelButton_Click(object sender, RoutedEventArgs e)
         {
-            Canceled = true;
             this.Close();
         }
 

@@ -20,6 +20,7 @@ namespace LiBeo
         public static string StopWordsPath = AppDomain.CurrentDomain.BaseDirectory + @"\stop_words.txt";
 
         public static Outlook.Folder RootFolder { get; set; }
+        public static string EmailAddress { get; set; }
         public static FolderStructure Structure { get; set; }
         public static SQLiteConnection DbConn { get; set; }
 
@@ -35,6 +36,7 @@ namespace LiBeo
         {
             // initialize properties
             RootFolder = (Outlook.Folder) this.Application.ActiveExplorer().Session.DefaultStore.GetRootFolder();
+            EmailAddress = this.Application.ActiveExplorer().Session.CurrentUser.Address;
             Structure = new FolderStructure(RootFolder);
             DbConn = new SQLiteConnection("Data Source=" + DbPath);
 
@@ -89,11 +91,19 @@ namespace LiBeo
         }
 
         /// <summary>
-        /// Moves the selected mails to a user-defined tray
+        /// Gets and returns a folder based on a path
         /// </summary>
-        public static void MoveToTray()
+        /// <param name="path">The path of the folder</param>
+        /// <returns>The folder based on the path</returns>
+        public static Outlook.Folder GetFolderFromPath(string path)
         {
-
+            Outlook.Folder folder = RootFolder;
+            foreach(string f in path.Split('\\'))
+            {
+                if(f != "")
+                    folder = (Outlook.Folder) folder.Folders[f];
+            }
+            return folder;
         }
 
         /// <summary>
