@@ -31,10 +31,13 @@ namespace LiBeo
 
             // display folder structure in tree view
             ThisAddIn.DbConn.Open();
-            ThisAddIn.Structure.DisplayInTreeView(ThisAddIn.DbConn, folderExplorer);
+            ThisAddIn.Structure.DisplayInTreeView(ThisAddIn.DbConn, folderExplorer, ThisAddIn.Name, false);
             ThisAddIn.DbConn.Close();
         }
 
+        /// <summary>
+        /// called when the ok button is pressed; sets the canceled property to false and closes the window
+        /// </summary>
         private void okButton_Click(object sender, RoutedEventArgs e)
         {
             Canceled = false;

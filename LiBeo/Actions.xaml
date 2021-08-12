@@ -23,8 +23,15 @@
                               BorderThickness="0"/>
                 </StackPanel>
             </TabItem>
-            <TabItem Header="Ordner erstellen und einsortieren">
-                
+            <TabItem Header="Mit Schnellzugriffsliste einsortieren">
+                <StackPanel>
+                    <ListView x:Name="quickAccessList"
+                              MaxHeight="300"
+                              BorderThickness="0"/>
+                    <Label x:Name="listViewEmptyLabel"
+                           HorizontalAlignment="Center"
+                           Foreground="DarkGray"/>
+                </StackPanel>
             </TabItem>
             <TabItem Header="In Ablage verschieben"/>
         </TabControl>

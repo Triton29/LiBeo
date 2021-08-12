@@ -70,6 +70,7 @@ namespace LiBeo
         {
             foreach(Outlook.Folder folder in parentFolder.Folders)
             {
+                folder.PropertyAccessor.GetProperty("PR_ATTR_HIDDEN");
                 // insert folder if not already inserted
                 cmd.CommandText = "INSERT OR IGNORE INTO folders (name, parent_id, got_deleted) VALUES (@name, @parent_id, 0) ";
                 cmd.Parameters.AddWithValue("@name", folder.Name);
@@ -107,19 +108,13 @@ namespace LiBeo
         /// </summary>
         /// <param name="conn">The SQLite database connection</param>
         /// <param name="treeView">The treeview in which the structure will be displayed</param>
-        public void DisplayInTreeView(SQLiteConnection conn, TreeView treeView)
+        /// <param name="rootName">The name of the root folder</param>
+        /// <param name="createCheckBoxes">If checkboxes before the header should be created; excelent for multi-select</param>
+        public void DisplayInTreeView(SQLiteConnection conn, TreeView treeView, string rootName, bool createCheckBoxes)
         {
-            SQLiteCommand cmd = new SQLiteCommand(conn);
-            cmd.CommandText = "SELECT * FROM folders WHERE parent_id=1";
-            SQLiteDataReader dataReader = cmd.ExecuteReader();
-
-            while (dataReader.Read())
-            {
-                TreeViewItem item = new TreeViewItem() { Header = dataReader.GetString(0), Tag = dataReader.GetInt32(1) };
-                treeView.Items.Add(item);
-                AddChildItems(conn, item, dataReader.GetInt32(1));
-            }
-            dataReader.Close();
+            TreeViewItem item = new TreeViewItem() { Header = rootName, Tag = 1, IsExpanded = true };
+            treeView.Items.Add(item);
+            AddChildItems(conn, item, 1, createCheckBoxes);
         }
 
         /// <summary>
@@ -128,19 +123,31 @@ namespace LiBeo
         /// <param name="conn">The SQLite database connection</param>
         /// <param name="parentItem">The parent-TreeViewItem from the child folders</param>
         /// <param name="parentId">The id from the parent folder in the database</param>
-        private void AddChildItems(SQLiteConnection conn, TreeViewItem parentItem, int parentId)
+        /// <param name="createCheckBoxes">If checkboxes before the header should be created; excelent for multi-select</param>
+        private void AddChildItems(SQLiteConnection conn, TreeViewItem parentItem, int parentId, bool createCheckBoxes)
         {
             SQLiteCommand cmd = new SQLiteCommand(conn);
-            cmd.CommandText = "SELECT * FROM folders WHERE parent_id=@id";
+            cmd.CommandText = "SELECT * FROM folders WHERE parent_id=@id ORDER BY name ASC";
             cmd.Parameters.AddWithValue("@id", parentId);
             cmd.Prepare();
             SQLiteDataReader dataReader = cmd.ExecuteReader();
 
             while (dataReader.Read())
             {
-                TreeViewItem childItem = new TreeViewItem() { Header = dataReader.GetString(0), Tag = dataReader.GetInt32(1) };
-                parentItem.Items.Add(childItem);
-                AddChildItems(conn, childItem, dataReader.GetInt32(1));
+                TreeViewItem childItem;
+                if (createCheckBoxes)
+                {
+                    WrapPanel wrapPanel = new WrapPanel();
+                    wrapPanel.Children.Add(new CheckBox() { Content = dataReader.GetString(0), Tag = dataReader.GetInt32(1) });
+                    childItem = new TreeViewItem() { Header = wrapPanel };
+                    parentItem.Items.Add(childItem);
+                }
+                else
+                {
+                    childItem = new TreeViewItem() { Header = dataReader.GetString(0), Tag = dataReader.GetInt32(1) };
+                    parentItem.Items.Add(childItem);
+                }
+                AddChildItems(conn, childItem, dataReader.GetInt32(1), createCheckBoxes);
             }
             dataReader.Close();
         }

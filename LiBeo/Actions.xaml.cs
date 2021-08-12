@@ -25,13 +25,35 @@ namespace LiBeo
     public partial class Actions : Window
     {
         private Outlook.Folder rootFolder = ThisAddIn.RootFolder;
+
+        /// <summary>
+        /// manage first focused elements
+        /// </summary>
+        protected override void OnContentRendered(EventArgs e)
+        {
+            base.OnContentRendered(e);
+
+            if (tabConrol.SelectedIndex == 1)
+                Keyboard.Focus(folderExplorer);
+            if (tabConrol.SelectedIndex == 2)
+                Keyboard.Focus(quickAccessList);
+        }
+
         public Actions()
         {
             InitializeComponent();
 
+            // display folder structure
             ThisAddIn.DbConn.Open();
-            ThisAddIn.Structure.DisplayInTreeView(ThisAddIn.DbConn, folderExplorer);
+            ThisAddIn.Structure.DisplayInTreeView(ThisAddIn.DbConn, folderExplorer, ThisAddIn.Name, false);
             ThisAddIn.DbConn.Close();
+
+            // display quick access list
+            DisplayQuickAccessList(quickAccessList);
+            if (quickAccessList.Items.Count == 0)
+            {
+                listViewEmptyLabel.Content = "Keine Elemente in der Schenllzugriffsliste";
+            }
         }
 
         /// <summary>
@@ -39,21 +61,66 @@ namespace LiBeo
         /// </summary>
         private void OKButton_Click(object sender, RoutedEventArgs e)
         {
-            ThisAddIn.DbConn.Open();
-            int id = (int)((TreeViewItem)folderExplorer.SelectedItem).Tag;
-            List<string> path = FolderStructure.GetPath(ThisAddIn.DbConn, id);
-            Outlook.Folder currentFolder = rootFolder;
-            foreach(string folder in path)
+            if(tabConrol.SelectedIndex == 0)    // automatic sort
             {
-                currentFolder = (Outlook.Folder) currentFolder.Folders[folder];
-            }
-            foreach(Outlook.MailItem mail in ThisAddIn.GetSelectedMails())
-            {
-                mail.Move(currentFolder);
-            }
 
-            ThisAddIn.DbConn.Close();
-            this.Close();
+            }
+            if(tabConrol.SelectedIndex == 1)    // manual sort
+            {
+                ThisAddIn.DbConn.Open();
+                try
+                {
+                    TreeViewItem selectedItem = (TreeViewItem)folderExplorer.SelectedItem;
+                    if (selectedItem == null)
+                    {
+                        ThisAddIn.DbConn.Close();
+                        return;
+                    }
+
+                    int id = (int)selectedItem.Tag;
+
+                    List<string> path = FolderStructure.GetPath(ThisAddIn.DbConn, id);
+                    Outlook.Folder currentFolder = rootFolder;
+                    foreach (string folder in path)
+                    {
+                        currentFolder = (Outlook.Folder)currentFolder.Folders[folder];
+                    }
+                    foreach (Outlook.MailItem mail in ThisAddIn.GetSelectedMails())
+                    {
+                        mail.Move(currentFolder);
+                    }
+
+                    ThisAddIn.DbConn.Close();
+                    this.Close();
+                }
+                catch (System.Runtime.InteropServices.COMException)
+                {
+                    MessageBox.Show("Der ausgewählte Ordner exestiert nicht mehr. Bitte synchronisieren Sie die Ordnerstruktur.",
+                        "Ordner exestiert nicht mehr",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+                ThisAddIn.DbConn.Close();
+            }
+            if(tabConrol.SelectedIndex == 2)    // quick access list sort
+            {
+                ThisAddIn.DbConn.Open();
+                int id = (int)((ListViewItem)quickAccessList.SelectedItem).Tag;
+
+                List<string> path = FolderStructure.GetPath(ThisAddIn.DbConn, id);
+                Outlook.Folder currentFolder = rootFolder;
+                foreach (string folder in path)
+                {
+                    currentFolder = (Outlook.Folder)currentFolder.Folders[folder];
+                }
+                foreach (Outlook.MailItem mail in ThisAddIn.GetSelectedMails())
+                {
+                    mail.Move(currentFolder);
+                }
+
+                this.Close();
+                ThisAddIn.DbConn.Close();
+            }
         }
 
         /// <summary>
@@ -173,6 +240,27 @@ namespace LiBeo
                     return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Displays a the quick access list of folders saved in the database in a list view
+        /// </summary>
+        /// <param name="list">The list view where the folders are displayed</param>
+        public static void DisplayQuickAccessList(ListView list)
+        {
+            ThisAddIn.DbConn.Open();
+            SQLiteCommand dbCmd = new SQLiteCommand(ThisAddIn.DbConn);
+
+            dbCmd.CommandText = "SELECT * FROM quick_access_folders";
+            SQLiteDataReader dataReader = dbCmd.ExecuteReader();
+            while (dataReader.Read())
+            {
+                int id = dataReader.GetInt32(0);
+                List<string> path = FolderStructure.GetPath(ThisAddIn.DbConn, id);
+                ListViewItem item = new ListViewItem() { Content = path[path.Count - 1], Tag = id};
+                list.Items.Add(item);
+            }
+            ThisAddIn.DbConn.Close();
         }
     }
 }

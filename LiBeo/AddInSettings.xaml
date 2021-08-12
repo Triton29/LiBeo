@@ -28,6 +28,13 @@
                         Padding="3">
                 </Button>
             </StackPanel>
+            <Button x:Name="quickAccessListButton"
+                    Click="quickAccessListButton_Click"
+                    HorizontalAlignment="Left"
+                    Width="160"
+                    Margin="0 5">
+                Schnellzugriffsliste ändern
+            </Button>
         </StackPanel>
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Right">

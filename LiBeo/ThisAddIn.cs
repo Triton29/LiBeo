@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using System.Windows;
+using System.Windows.Media;
 using System.Data.SQLite;
 using Office = Microsoft.Office.Core;
 using Outlook = Microsoft.Office.Interop.Outlook;
@@ -21,6 +23,7 @@ namespace LiBeo
 
         public static Outlook.Folder RootFolder { get; set; }
         public static string EmailAddress { get; set; }
+        public static string Name { get; set; }
         public static FolderStructure Structure { get; set; }
         public static SQLiteConnection DbConn { get; set; }
 
@@ -37,12 +40,16 @@ namespace LiBeo
             // initialize properties
             RootFolder = (Outlook.Folder) this.Application.ActiveExplorer().Session.DefaultStore.GetRootFolder();
             EmailAddress = this.Application.ActiveExplorer().Session.CurrentUser.Address;
+            Name = this.Application.Session.Accounts[1].DisplayName;
             Structure = new FolderStructure(RootFolder);
             DbConn = new SQLiteConnection("Data Source=" + DbPath);
 
             // synchronize folder structure if enabled
             if (Properties.Settings.Default.SyncFolderStructureOnStartup)
                 SyncFolderStructure();
+
+            // setup database
+            SetupDatabase();
 
             // synchronizes stop words if not done yet
             if (!Properties.Settings.Default.SyncedStopWords)
@@ -75,8 +82,6 @@ namespace LiBeo
         {
             DbConn.Open();
             SQLiteCommand dbCmd = new SQLiteCommand(DbConn);
-            dbCmd.CommandText = "CREATE TABLE IF NOT EXISTS stop_words (word varchar(255) UNIQUE)";
-            dbCmd.ExecuteNonQuery();
 
             System.IO.StreamReader file = new System.IO.StreamReader(StopWordsPath);
             string line;
@@ -106,6 +111,25 @@ namespace LiBeo
             return folder;
         }
 
+        public static void SetupDatabase()
+        {
+            DbConn.Open();
+            SQLiteCommand dbCmd = new SQLiteCommand(DbConn);
+
+            dbCmd.CommandText = "CREATE TABLE IF NOT EXISTS quick_access_folders (folder int UNIQUE)";
+            dbCmd.ExecuteNonQuery();
+
+            dbCmd.CommandText =
+                "CREATE TABLE IF NOT EXISTS folders (" +
+                "name varchar(255), id INTEGER PRIMARY KEY AUTOINCREMENT, parent_id int, got_deleted bit, UNIQUE(name, parent_id))";
+            dbCmd.ExecuteNonQuery();
+
+            dbCmd.CommandText = "CREATE TABLE IF NOT EXISTS stop_words (word varchar(255) UNIQUE)";
+            dbCmd.ExecuteNonQuery();
+
+            DbConn.Close();
+        }
+
         /// <summary>
         /// Gets all selected mails and returns them
         /// </summary>
@@ -115,6 +139,24 @@ namespace LiBeo
             foreach(Outlook.MailItem mail in new Outlook.Application().ActiveExplorer().Selection)
             {
                 yield return mail;
+            }
+        }
+
+        internal static IEnumerable<T> GetLogicalChildren<T>(DependencyObject depObj) where T : DependencyObject
+        {
+            if (depObj == null)
+                yield return null;
+            
+            foreach (var rawChild in LogicalTreeHelper.GetChildren(depObj))
+            {
+                if(rawChild is DependencyObject)
+                {
+                    var child = (DependencyObject)rawChild;
+                    if (child is T)
+                        yield return (T)child;
+                    foreach (T childOfChild in GetLogicalChildren<T>(child))
+                        yield return childOfChild;
+                }
             }
         }
 

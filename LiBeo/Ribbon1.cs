@@ -56,6 +56,7 @@ namespace LiBeo
             actionsForm.Show();
             // select create directory tab
             actionsForm.tabConrol.SelectedIndex = 2;
+            actionsForm.quickAccessList.TabIndex = 0;
         }
 
         /// <summary>
