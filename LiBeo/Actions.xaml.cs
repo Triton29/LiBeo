@@ -93,7 +93,7 @@ namespace LiBeo
                     ThisAddIn.DbConn.Close();
                     this.Close();
                 }
-                catch (System.Runtime.InteropServices.COMException)
+                catch
                 {
                     MessageBox.Show("Der ausgewählte Ordner exestiert nicht mehr. Bitte synchronisieren Sie die Ordnerstruktur.",
                         "Ordner exestiert nicht mehr",
@@ -105,20 +105,38 @@ namespace LiBeo
             if(tabConrol.SelectedIndex == 2)    // quick access list sort
             {
                 ThisAddIn.DbConn.Open();
-                int id = (int)((ListViewItem)quickAccessList.SelectedItem).Tag;
-
-                List<string> path = FolderStructure.GetPath(ThisAddIn.DbConn, id);
-                Outlook.Folder currentFolder = rootFolder;
-                foreach (string folder in path)
+                try
                 {
-                    currentFolder = (Outlook.Folder)currentFolder.Folders[folder];
-                }
-                foreach (Outlook.MailItem mail in ThisAddIn.GetSelectedMails())
-                {
-                    mail.Move(currentFolder);
-                }
+                    ListViewItem selectedItem = (ListViewItem)quickAccessList.SelectedItem;
+                    if (selectedItem == null)
+                    {
+                        ThisAddIn.DbConn.Close();
+                        return;
+                    }
 
-                this.Close();
+                    int id = (int)selectedItem.Tag;
+
+                    List<string> path = FolderStructure.GetPath(ThisAddIn.DbConn, id);
+                    Outlook.Folder currentFolder = rootFolder;
+                    foreach (string folder in path)
+                    {
+                        currentFolder = (Outlook.Folder)currentFolder.Folders[folder];
+                    }
+                    foreach (Outlook.MailItem mail in ThisAddIn.GetSelectedMails())
+                    {
+                        mail.Move(currentFolder);
+                    }
+
+                    this.Close();
+                }
+                catch
+                {
+                    MessageBox.Show("Der ausgewählte Ordner exestiert nicht mehr. Bitte synchronisieren Sie die Ordnerstruktur.",
+                        "Ordner exestiert nicht mehr",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+                
                 ThisAddIn.DbConn.Close();
             }
         }
