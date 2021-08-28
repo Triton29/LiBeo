@@ -14,23 +14,31 @@
         <TabControl x:Name="tabConrol"
                     SelectionChanged="tabConrol_SelectionChanged">
             <TabItem Header="Automatisch einsortieren">
-                
+                <StackPanel>
+                    <Label x:Name="autoSortListEmpty"
+                       HorizontalAlignment="Center"
+                       Foreground="DarkGray"/>
+                    <ListView x:Name="autoSortList"
+                          MaxHeight="300"
+                          BorderThickness="0"/>
+                </StackPanel>
             </TabItem>
             <TabItem Header="Manuell einsortieren">
                 <StackPanel>
                     <TreeView x:Name="folderExplorer" 
                               MaxHeight="300"
-                              BorderThickness="0"/>
+                              BorderThickness="0"
+                              HorizontalAlignment="Stretch"/>
                 </StackPanel>
             </TabItem>
             <TabItem Header="Mit Schnellzugriffsliste einsortieren">
                 <StackPanel>
+                    <Label x:Name="quickAccessListEmpty"
+                           HorizontalAlignment="Center"
+                           Foreground="DarkGray"/>
                     <ListView x:Name="quickAccessList"
                               MaxHeight="300"
                               BorderThickness="0"/>
-                    <Label x:Name="listViewEmptyLabel"
-                           HorizontalAlignment="Center"
-                           Foreground="DarkGray"/>
                 </StackPanel>
             </TabItem>
             <TabItem Header="In Ablage verschieben"/>

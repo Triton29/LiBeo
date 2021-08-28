@@ -111,6 +111,9 @@ namespace LiBeo
             return folder;
         }
 
+        /// <summary>
+        /// Sets up the database for quick access list, folder structure, stop words and folder
+        /// </summary>
         public static void SetupDatabase()
         {
             DbConn.Open();
@@ -125,6 +128,11 @@ namespace LiBeo
             dbCmd.ExecuteNonQuery();
 
             dbCmd.CommandText = "CREATE TABLE IF NOT EXISTS stop_words (word varchar(255) UNIQUE)";
+            dbCmd.ExecuteNonQuery();
+
+            dbCmd.CommandText = "CREATE TABLE IF NOT EXISTS tags (folder int, tag varchar(255), UNIQUE(folder, tag))";
+            dbCmd.ExecuteNonQuery();
+            dbCmd.CommandText = "CREATE TABLE IF NOT EXISTS current_mail_subject (folder int, word varchar(255) UNIQUE)";
             dbCmd.ExecuteNonQuery();
 
             DbConn.Close();
@@ -142,6 +150,10 @@ namespace LiBeo
             }
         }
 
+        /// <summary>
+        /// Gets all logical children of a wpf element
+        /// </summary>
+        /// <returns>All children of a wpf element</returns>
         internal static IEnumerable<T> GetLogicalChildren<T>(DependencyObject depObj) where T : DependencyObject
         {
             if (depObj == null)

@@ -70,7 +70,6 @@ namespace LiBeo
         {
             foreach(Outlook.Folder folder in parentFolder.Folders)
             {
-                folder.PropertyAccessor.GetProperty("PR_ATTR_HIDDEN");
                 // insert folder if not already inserted
                 cmd.CommandText = "INSERT OR IGNORE INTO folders (name, parent_id, got_deleted) VALUES (@name, @parent_id, 0) ";
                 cmd.Parameters.AddWithValue("@name", folder.Name);

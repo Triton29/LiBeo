@@ -33,6 +33,8 @@ namespace LiBeo
         {
             base.OnContentRendered(e);
 
+            if (tabConrol.SelectedIndex == 0)
+                Keyboard.Focus(autoSortList);
             if (tabConrol.SelectedIndex == 1)
                 Keyboard.Focus(folderExplorer);
             if (tabConrol.SelectedIndex == 2)
@@ -52,7 +54,35 @@ namespace LiBeo
             DisplayQuickAccessList(quickAccessList);
             if (quickAccessList.Items.Count == 0)
             {
-                listViewEmptyLabel.Content = "Keine Elemente in der Schenllzugriffsliste";
+                quickAccessListEmpty.Content = "Keine Elemente in der Schenllzugriffsliste";
+            }
+
+            var selectedMails = ThisAddIn.GetSelectedMails();
+            if(selectedMails.Count() == 1)
+            {
+                DisplayAutoSortList(autoSortList, selectedMails.First());
+                if(autoSortList.Items.Count == 0)
+                {
+                    autoSortListEmpty.Content = "Keine Vorschläge für diese E-Mail gefunden";
+                }
+            }
+            else
+            {
+                autoSortListEmpty.Content = "Keine Vorschläge gefunden, da mehrere E-Mails ausgewählt wurden";
+            }
+        }
+
+        static void MoveMails(IEnumerable<Outlook.MailItem> mails, int id)
+        {
+            List<string> path = FolderStructure.GetPath(ThisAddIn.DbConn, id);
+            Outlook.Folder currentFolder = ThisAddIn.RootFolder;
+            foreach (string folder in path)
+            {
+                currentFolder = (Outlook.Folder)currentFolder.Folders[folder];
+            }
+            foreach (Outlook.MailItem mail in mails)
+            {
+                mail.Move(currentFolder);
             }
         }
 
@@ -61,13 +91,35 @@ namespace LiBeo
         /// </summary>
         private void OKButton_Click(object sender, RoutedEventArgs e)
         {
-            if(tabConrol.SelectedIndex == 0)    // automatic sort
+            ThisAddIn.DbConn.Open();
+            int id = -1;
+            if (tabConrol.SelectedIndex == 0)    // automatic sort
             {
+                try
+                {
+                    ListViewItem selectedItem = (ListViewItem)autoSortList.SelectedItem;
+                    if (selectedItem == null)
+                    {
+                        ThisAddIn.DbConn.Close();
+                        return;
+                    }
 
+                    id = (int)selectedItem.Tag;
+
+                    MoveMails(ThisAddIn.GetSelectedMails(), id);
+
+                    this.Close();
+                }
+                catch
+                {
+                    MessageBox.Show("Der ausgewählte Ordner exestiert nicht mehr. Bitte synchronisieren Sie die Ordnerstruktur.",
+                        "Ordner exestiert nicht mehr",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
             }
             if(tabConrol.SelectedIndex == 1)    // manual sort
             {
-                ThisAddIn.DbConn.Open();
                 try
                 {
                     TreeViewItem selectedItem = (TreeViewItem)folderExplorer.SelectedItem;
@@ -77,20 +129,10 @@ namespace LiBeo
                         return;
                     }
 
-                    int id = (int)selectedItem.Tag;
+                    id = (int)selectedItem.Tag;
 
-                    List<string> path = FolderStructure.GetPath(ThisAddIn.DbConn, id);
-                    Outlook.Folder currentFolder = rootFolder;
-                    foreach (string folder in path)
-                    {
-                        currentFolder = (Outlook.Folder)currentFolder.Folders[folder];
-                    }
-                    foreach (Outlook.MailItem mail in ThisAddIn.GetSelectedMails())
-                    {
-                        mail.Move(currentFolder);
-                    }
+                    MoveMails(ThisAddIn.GetSelectedMails(), id);
 
-                    ThisAddIn.DbConn.Close();
                     this.Close();
                 }
                 catch
@@ -104,7 +146,6 @@ namespace LiBeo
             }
             if(tabConrol.SelectedIndex == 2)    // quick access list sort
             {
-                ThisAddIn.DbConn.Open();
                 try
                 {
                     ListViewItem selectedItem = (ListViewItem)quickAccessList.SelectedItem;
@@ -114,18 +155,9 @@ namespace LiBeo
                         return;
                     }
 
-                    int id = (int)selectedItem.Tag;
+                    id = (int)selectedItem.Tag;
 
-                    List<string> path = FolderStructure.GetPath(ThisAddIn.DbConn, id);
-                    Outlook.Folder currentFolder = rootFolder;
-                    foreach (string folder in path)
-                    {
-                        currentFolder = (Outlook.Folder)currentFolder.Folders[folder];
-                    }
-                    foreach (Outlook.MailItem mail in ThisAddIn.GetSelectedMails())
-                    {
-                        mail.Move(currentFolder);
-                    }
+                    MoveMails(ThisAddIn.GetSelectedMails(), id);
 
                     this.Close();
                 }
@@ -136,9 +168,15 @@ namespace LiBeo
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
                 }
-                
-                ThisAddIn.DbConn.Close();
             }
+
+            if(id != -1)
+            {
+                foreach(Outlook.MailItem mail in ThisAddIn.GetSelectedMails())
+                    LearnTags(mail.Subject, id);
+            }
+
+            ThisAddIn.DbConn.Close();
         }
 
         /// <summary>
@@ -170,6 +208,90 @@ namespace LiBeo
                 MoveToTray();
                 this.Close();
             }
+        }
+
+        /// <summary>
+        /// Saves a string (subject of a mail) and the mail's target folder id in a database in a table named current_mail_subject;
+        /// every word has an entry; stop words (from the stop_words table) will be deleted
+        /// </summary>
+        /// <param name="dbCmd">SQLiteCommand of the database</param>
+        /// <param name="subject">The string which should be saved</param>
+        /// <param name="targetFolder">The mail's target folder id</param>
+        static void SubjectToDb(SQLiteCommand dbCmd, string subject, int targetFolder)
+        {
+            dbCmd.CommandText = "DELETE FROM current_mail_subject";
+            dbCmd.ExecuteNonQuery();
+
+            foreach (string word in subject.Split(' '))
+            {
+                string rawWord = string.Concat(word.Where(char.IsLetterOrDigit));
+                if (rawWord != "")
+                {
+                    dbCmd.CommandText = "INSERT OR IGNORE INTO current_mail_subject (folder, word) VALUES (@id, @word)";
+                    dbCmd.Parameters.AddWithValue("@id", targetFolder);
+                    dbCmd.Parameters.AddWithValue("@word", rawWord);
+                    dbCmd.Prepare();
+                    dbCmd.ExecuteNonQuery();
+                }
+                dbCmd.CommandText = "DELETE FROM current_mail_subject WHERE word IN (SELECT word FROM stop_words)";
+                dbCmd.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
+        /// Learns tags for mail-folders and saves them in a database
+        /// </summary>
+        /// <param name="subject">The subject of the mail</param>
+        /// <param name="folderId">The folder id of the folder in which the mail was moved</param>
+        public static void LearnTags(string subject, int folderId)
+        {
+            ThisAddIn.DbConn.Open();
+            SQLiteCommand dbCmd = new SQLiteCommand(ThisAddIn.DbConn);
+
+            SubjectToDb(dbCmd, subject, folderId);
+
+            dbCmd.CommandText = "INSERT OR IGNORE INTO tags (folder, tag) SELECT folder, word FROM current_mail_subject";
+            dbCmd.ExecuteNonQuery();
+
+            ThisAddIn.DbConn.Close();
+        }
+
+        /// <summary>
+        /// Displays folder suggestions for a mail in a ListView (AutoSortList)
+        /// </summary>
+        /// <param name="list">The ListView</param>
+        /// <param name="mail">The mail</param>
+        public static void DisplayAutoSortList(ListView list, Outlook.MailItem mail)
+        {
+            ThisAddIn.DbConn.Open();
+            SQLiteCommand dbCmd = new SQLiteCommand(ThisAddIn.DbConn);
+
+            SubjectToDb(dbCmd, mail.Subject, 0);
+            dbCmd.CommandText = "SELECT folder FROM tags WHERE tag IN (SELECT word FROM current_mail_subject)";
+            SQLiteDataReader dataReader = dbCmd.ExecuteReader();
+
+            List<FolderSuggestion> folderSuggestions = new List<FolderSuggestion>();
+            while (dataReader.Read())
+            {
+                FolderSuggestion folderSuggestion = folderSuggestions.Find(x => x.FolderId == dataReader.GetInt32(0));
+                if(folderSuggestion == null)
+                {
+                    folderSuggestions.Add(new FolderSuggestion { FolderId = dataReader.GetInt32(0), Importance = 1 });
+                }
+                else
+                {
+                    folderSuggestion.Importance++;
+                }
+            }
+            List<FolderSuggestion> sortedFolderSuggestions = folderSuggestions.OrderByDescending(x => x.Importance).ToList();
+            foreach(FolderSuggestion suggestion in sortedFolderSuggestions)
+            {
+                var path = FolderStructure.GetPath(ThisAddIn.DbConn, suggestion.FolderId);
+                ListViewItem item = new ListViewItem { Content = path[path.Count - 1], Tag = suggestion.FolderId };
+                list.Items.Add(item);
+            }
+
+            ThisAddIn.DbConn.Close();
         }
 
         /// <summary>
@@ -280,5 +402,11 @@ namespace LiBeo
             }
             ThisAddIn.DbConn.Close();
         }
+    }
+
+    public class FolderSuggestion
+    {
+        public int FolderId { get; set; }
+        public int Importance { get; set; }
     }
 }
