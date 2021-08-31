@@ -55,6 +55,10 @@ namespace LiBeo
 
             InsertChildFolders(cmd, RootFolder, 1);
 
+            // delete references of deleted folders
+            cmd.CommandText = "DELETE FROM tags WHERE folder IN (SELECT id FROM folders WHERE got_deleted=1)";
+            cmd.ExecuteNonQuery();
+
             // delete all deleted folders
             cmd.CommandText = "DELETE FROM folders WHERE got_deleted=1";
             cmd.ExecuteNonQuery();
