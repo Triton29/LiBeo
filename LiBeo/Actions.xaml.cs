@@ -57,7 +57,21 @@ namespace LiBeo
                 quickAccessListEmpty.Content = "Keine Elemente in der Schenllzugriffsliste";
             }
 
-            var selectedMails = ThisAddIn.GetSelectedMails();
+            IEnumerable<Outlook.MailItem> selectedMails;
+            try
+            {
+                selectedMails = ThisAddIn.GetSelectedMails();
+            }
+            catch
+            {
+                this.Close();
+                MessageBox.Show("Bitte wählen Sie nur E-Mails aus",
+                        "Ausgewählte Elemente sind keine E-Mails",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                return;
+            }
+            
             if(selectedMails.Count() == 1)
             {
                 DisplayAutoSortList(autoSortList, selectedMails.First());
@@ -68,7 +82,7 @@ namespace LiBeo
             }
             else
             {
-                autoSortListEmpty.Content = "Keine Vorschläge gefunden, da mehrere E-Mails ausgewählt wurden";
+                autoSortListEmpty.Content = "Keine Vorschläge gefunden, da mehrere bzw. keine E-Mails ausgewählt wurden";
             }
         }
 
@@ -142,7 +156,6 @@ namespace LiBeo
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
                 }
-                ThisAddIn.DbConn.Close();
             }
             if(tabConrol.SelectedIndex == 2)    // quick access list sort
             {
@@ -245,15 +258,12 @@ namespace LiBeo
         /// <param name="folderId">The folder id of the folder in which the mail was moved</param>
         public static void LearnTags(string subject, int folderId)
         {
-            ThisAddIn.DbConn.Open();
             SQLiteCommand dbCmd = new SQLiteCommand(ThisAddIn.DbConn);
 
             SubjectToDb(dbCmd, subject, folderId);
 
             dbCmd.CommandText = "INSERT OR IGNORE INTO tags (folder, tag) SELECT folder, word FROM current_mail_subject";
             dbCmd.ExecuteNonQuery();
-
-            ThisAddIn.DbConn.Close();
         }
 
         /// <summary>

@@ -144,9 +144,10 @@ namespace LiBeo
         /// <returns>All selected mails</returns>
         internal static IEnumerable<Outlook.MailItem> GetSelectedMails()
         {
-            foreach(Outlook.MailItem mail in new Outlook.Application().ActiveExplorer().Selection)
+            foreach (object mail in new Outlook.Application().ActiveExplorer().Selection)
             {
-                yield return mail;
+                if(mail is Outlook.MailItem)
+                    yield return (Outlook.MailItem) mail;
             }
         }
 
