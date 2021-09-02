@@ -35,6 +35,9 @@
 					<button id="SyncStopWords"
 							label="Stop Words synchronisieren"
 							onAction="SyncStopWords"/>
+					<button id="MoveFolder"
+							label="Ordner verschieben"
+							onAction="MoveFolder"/>
 				</group>
 				<group id="InfoGroup"
 						 label="Einstellungen">

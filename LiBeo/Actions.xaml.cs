@@ -183,7 +183,7 @@ namespace LiBeo
                 }
             }
 
-            if(id != -1)
+            if(id != -1 && learnNothingCheckBox.IsChecked == false)
             {
                 foreach(Outlook.MailItem mail in ThisAddIn.GetSelectedMails())
                     LearnTags(mail.Subject, id);

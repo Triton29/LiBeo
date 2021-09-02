@@ -43,6 +43,10 @@
             </TabItem>
             <TabItem Header="In Ablage verschieben"/>
         </TabControl>
+        <CheckBox x:Name="learnNothingCheckBox"
+                      Margin="0 10 0 0">
+            Nichts lernen
+        </CheckBox>
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Margin="0 10 0 0">

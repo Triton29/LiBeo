@@ -97,6 +97,15 @@ namespace LiBeo
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="control">The button which calls this function</param>
+        public void MoveFolder(Office.IRibbonControl control)
+        {
+            
+        }
+
+        /// <summary>
         /// Creates a window with settings for this Add-In
         /// </summary>
         /// <param name="control">The button which calls this function</param>
