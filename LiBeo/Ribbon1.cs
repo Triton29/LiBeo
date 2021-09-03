@@ -102,7 +102,7 @@ namespace LiBeo
         /// <param name="control">The button which calls this function</param>
         public void MoveFolder(Office.IRibbonControl control)
         {
-            
+            Actions.MoveFolder();
         }
 
         /// <summary>

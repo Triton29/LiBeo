@@ -20,6 +20,7 @@ namespace LiBeo
     /// </summary>
     public partial class SelectFolder : Window
     {
+        public int SelectedFolderId;
         public List<string> SelectedFolderPath;
         public bool Canceled = true;
 
@@ -71,6 +72,7 @@ namespace LiBeo
         {
             ThisAddIn.DbConn.Open();
             int id = (int)((TreeViewItem)folderExplorer.SelectedItem).Tag;
+            SelectedFolderId = id;
             SelectedFolderPath = FolderStructure.GetPath(ThisAddIn.DbConn, id);
             ThisAddIn.DbConn.Close();
         }

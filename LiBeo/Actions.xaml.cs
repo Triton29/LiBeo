@@ -86,17 +86,33 @@ namespace LiBeo
             }
         }
 
-        static void MoveMails(IEnumerable<Outlook.MailItem> mails, int id)
+        /// <summary>
+        /// Gets an outlook folder from the folder path
+        /// </summary>
+        /// <param name="path">The folder path as a list</param>
+        /// <returns>The wanted outlook folder</returns>
+        static Outlook.Folder GetFolderFromPath(List<string> path)
         {
-            List<string> path = FolderStructure.GetPath(ThisAddIn.DbConn, id);
-            Outlook.Folder currentFolder = ThisAddIn.RootFolder;
-            foreach (string folder in path)
+            Outlook.Folder folder = ThisAddIn.RootFolder;
+            foreach(string folderName in path)
             {
-                currentFolder = (Outlook.Folder)currentFolder.Folders[folder];
+                folder = (Outlook.Folder)folder.Folders[folderName];
             }
+            return folder;
+        }
+
+        /// <summary>
+        /// Moves a collection of mails (or one mail) into antoher folder
+        /// </summary>
+        /// <param name="mails">The collection of mails to move</param>
+        /// <param name="folderId">The id of the folder in the database</param>
+        static void MoveMails(IEnumerable<Outlook.MailItem> mails, int folderId)
+        {
+            List<string> path = FolderStructure.GetPath(ThisAddIn.DbConn, folderId);
+            Outlook.Folder targetFolder = GetFolderFromPath(path);
             foreach (Outlook.MailItem mail in mails)
             {
-                mail.Move(currentFolder);
+                mail.Move(targetFolder);
             }
         }
 
@@ -412,8 +428,40 @@ namespace LiBeo
             }
             ThisAddIn.DbConn.Close();
         }
+
+        /// <summary>
+        /// Moves a folder into another folder, in outlook as well as in the database; the id stays the same, so the tags won't be lost
+        /// </summary>
+        public static void MoveFolder()
+        {
+            MultiSelectFolder foldersToMoveWindow = new MultiSelectFolder() { Title = "Ordner zum Verschieben auswählen" };
+            if(foldersToMoveWindow.ShowDialog() == false && !foldersToMoveWindow.Canceled)
+            {
+                SelectFolder targetFolderWindow = new SelectFolder() { Title = "Ordner auswählen, in den der/die Ordner verschoben werden" };
+                if(targetFolderWindow.ShowDialog() == false && !targetFolderWindow.Canceled)
+                {
+                    ThisAddIn.DbConn.Open();
+                    SQLiteCommand dbCmd = new SQLiteCommand(ThisAddIn.DbConn);
+                    foreach (int folderToMoveId in foldersToMoveWindow.SelectedFolderIds)
+                    {
+                        Outlook.Folder folderToMove = GetFolderFromPath(FolderStructure.GetPath(ThisAddIn.DbConn, folderToMoveId));
+                        Outlook.Folder targetFolder = GetFolderFromPath(targetFolderWindow.SelectedFolderPath);
+                        folderToMove.MoveTo(targetFolder);
+
+                        dbCmd.CommandText = "UPDATE folders SET parent_id=@parent_id WHERE id=@id";
+                        dbCmd.Parameters.AddWithValue("@parent_id", targetFolderWindow.SelectedFolderId);
+                        dbCmd.Parameters.AddWithValue("@id", folderToMoveId);
+                        dbCmd.ExecuteNonQuery();
+                    }
+                    ThisAddIn.DbConn.Close();
+                }
+            }
+        }
     }
 
+    /// <summary>
+    /// Represents a folder suggestion for the AutoSort function
+    /// </summary>
     public class FolderSuggestion
     {
         public int FolderId { get; set; }
