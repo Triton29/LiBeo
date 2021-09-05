@@ -17,7 +17,7 @@ namespace LiBeo
 {
     public partial class ThisAddIn
     {
-        public static string Version = "0.2 (Alpha)";
+        public static string Version = "1.0";
         public static string DbPath = AppDomain.CurrentDomain.BaseDirectory + @"\data.db";
         public static string StopWordsPath = AppDomain.CurrentDomain.BaseDirectory + @"\stop_words.txt";
 
