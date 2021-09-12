@@ -9,6 +9,7 @@ using System.Xml.Linq;
 using System.Windows;
 using System.Windows.Media;
 using System.Data.SQLite;
+using System.Threading;
 using Office = Microsoft.Office.Core;
 using Outlook = Microsoft.Office.Interop.Outlook;
 
@@ -35,6 +36,26 @@ namespace LiBeo
             return new Ribbon1();
         }
 
+        void StartupThreadAction()
+        {
+            Thread.Sleep(new TimeSpan(0, 0, 10));
+
+            // synchronize folder structure if enabled
+            if (Properties.Settings.Default.SyncFolderStructureOnStartup)
+                SyncFolderStructure();
+
+            // synchronizes stop words if not done yet
+            if (!Properties.Settings.Default.SyncedStopWords)
+            {
+                SyncStopWords();
+                Properties.Settings.Default.SyncedStopWords = true;
+                Properties.Settings.Default.Save();
+            }
+        }
+
+        /// <summary>
+        /// Called when the Add-In starts up; sets up all properties and the database
+        /// </summary>
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
             // initialize properties
@@ -44,20 +65,13 @@ namespace LiBeo
             Structure = new FolderStructure(RootFolder);
             DbConn = new SQLiteConnection("Data Source=" + DbPath);
 
-            // synchronize folder structure if enabled
-            if (Properties.Settings.Default.SyncFolderStructureOnStartup)
-                SyncFolderStructure();
-
             // setup database
             SetupDatabase();
 
-            // synchronizes stop words if not done yet
-            if (!Properties.Settings.Default.SyncedStopWords)
-            {
-                SyncStopWords();
-                Properties.Settings.Default.SyncedStopWords = true;
-                Properties.Settings.Default.Save();
-            }
+            // sync folder structure and stop words in new thread because it takes a long time
+            ThreadStart threadStart = new ThreadStart(StartupThreadAction);
+            Thread startupThread = new Thread(threadStart);
+            startupThread.Start();
         }
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
