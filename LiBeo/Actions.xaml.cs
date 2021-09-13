@@ -102,18 +102,23 @@ namespace LiBeo
         }
 
         /// <summary>
-        /// Moves a collection of mails (or one mail) into antoher folder
+        /// Moves a collection of mails (or one mail) into antoher folder; learns tags from mail subject
         /// </summary>
         /// <param name="mails">The collection of mails to move</param>
         /// <param name="folderId">The id of the folder in the database</param>
-        static void MoveMails(IEnumerable<Outlook.MailItem> mails, int folderId)
+        private void MoveMails(IEnumerable<Outlook.MailItem> mails, int folderId)
         {
             List<string> path = FolderStructure.GetPath(ThisAddIn.DbConn, folderId);
             Outlook.Folder targetFolder = GetFolderFromPath(path);
+            var waitThread = ThisAddIn.ShowWaitWindow();
             foreach (Outlook.MailItem mail in mails)
             {
                 mail.Move(targetFolder);
+                // Learn tags if "learn nothing" check box is not checked
+                if (learnNothingCheckBox.IsChecked == false)
+                    LearnTags(mail.Subject, folderId);
             }
+            ThisAddIn.CloseWaitWindow(waitThread);
         }
 
         /// <summary>
@@ -199,12 +204,6 @@ namespace LiBeo
                 }
             }
 
-            if(id != -1 && learnNothingCheckBox.IsChecked == false)
-            {
-                foreach(Outlook.MailItem mail in ThisAddIn.GetSelectedMails())
-                    LearnTags(mail.Subject, id);
-            }
-
             ThisAddIn.DbConn.Close();
         }
 
@@ -248,6 +247,9 @@ namespace LiBeo
         /// <param name="targetFolder">The mail's target folder id</param>
         static void SubjectToDb(SQLiteCommand dbCmd, string subject, int targetFolder)
         {
+            if (subject == null)
+                return;
+
             dbCmd.CommandText = "DELETE FROM current_mail_subject";
             dbCmd.ExecuteNonQuery();
 
@@ -313,7 +315,11 @@ namespace LiBeo
             foreach(FolderSuggestion suggestion in sortedFolderSuggestions)
             {
                 var path = FolderStructure.GetPath(ThisAddIn.DbConn, suggestion.FolderId);
-                ListViewItem item = new ListViewItem { Content = path[path.Count - 1], Tag = suggestion.FolderId };
+                ListViewItem item = new ListViewItem 
+                { 
+                    Content = path.Count > 1 ? path[path.Count - 2] + @"\" + path[path.Count - 1] : path[path.Count - 1], 
+                    Tag = suggestion.FolderId 
+                };
                 list.Items.Add(item);
             }
 
@@ -423,7 +429,11 @@ namespace LiBeo
             {
                 int id = dataReader.GetInt32(0);
                 List<string> path = FolderStructure.GetPath(ThisAddIn.DbConn, id);
-                ListViewItem item = new ListViewItem() { Content = path[path.Count - 1], Tag = id};
+                ListViewItem item = new ListViewItem() 
+                {
+                    Content = path[path.Count - 1], 
+                    Tag = id
+                };
                 list.Items.Add(item);
             }
             ThisAddIn.DbConn.Close();

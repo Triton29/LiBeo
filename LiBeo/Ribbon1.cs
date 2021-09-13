@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Data.SQLite;
+using System.Threading;
 using Office = Microsoft.Office.Core;
 using Outlook = Microsoft.Office.Interop.Outlook;
 
@@ -74,12 +75,9 @@ namespace LiBeo
         /// <param name="control">The button which calls this function</param>
         public void SyncFolderStructure(Office.IRibbonControl control)
         {
-            WaitWindow waitWindow = new WaitWindow();
-            waitWindow.Show();
-
+            Thread waitThread = ThisAddIn.ShowWaitWindow();
             ThisAddIn.SyncFolderStructure();
-
-            waitWindow.Close();
+            ThisAddIn.CloseWaitWindow(waitThread);
         }
 
         /// <summary>
@@ -88,12 +86,9 @@ namespace LiBeo
         /// <param name="control"></param>
         public void SyncStopWords(Office.IRibbonControl control)
         {
-            WaitWindow waitWindow = new WaitWindow();
-            waitWindow.Show();
-
+            Thread waitThread = ThisAddIn.ShowWaitWindow();
             ThisAddIn.SyncStopWords();
-
-            waitWindow.Close();
+            ThisAddIn.CloseWaitWindow(waitThread);
         }
 
         /// <summary>

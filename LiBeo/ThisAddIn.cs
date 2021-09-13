@@ -36,9 +36,13 @@ namespace LiBeo
             return new Ribbon1();
         }
 
+        #region thread methods
+        /// <summary>
+        /// Runs action for the StartupThread; synchronises the database while outlook has already started
+        /// </summary>
         void StartupThreadAction()
         {
-            Thread.Sleep(new TimeSpan(0, 0, 10));
+            Thread.Sleep(new TimeSpan(0, 0, 1));
 
             // synchronize folder structure if enabled
             if (Properties.Settings.Default.SyncFolderStructureOnStartup)
@@ -52,6 +56,40 @@ namespace LiBeo
                 Properties.Settings.Default.Save();
             }
         }
+
+        /// <summary>
+        /// Runs action for the WaitThread; creates a wait window
+        /// </summary>
+        static void WaitThreadAction()
+        {
+            WaitWindow waitWindow = new WaitWindow();
+            waitWindow.ShowDialog();
+        }
+        /// <summary>
+        /// Shows a wait window until CloseWaitWindow() method is called
+        /// </summary>
+        /// <returns>The wait thread (neccessary for closing the window)</returns>
+        public static Thread ShowWaitWindow()
+        {
+            ThreadStart threadStart = new ThreadStart(WaitThreadAction);
+            Thread waitThread = new Thread(threadStart);
+            waitThread.SetApartmentState(ApartmentState.STA);
+            waitThread.Start();
+            return waitThread;
+        }
+        /// <summary>
+        /// Closes the wait window created in a wait thread
+        /// </summary>
+        /// <param name="waitThread">The wait thread returned by ShowWaitWindow() method</param>
+        public static void CloseWaitWindow(Thread waitThread)
+        {
+            try
+            {
+                waitThread.Abort();
+            }
+            catch { }
+        }
+        #endregion
 
         /// <summary>
         /// Called when the Add-In starts up; sets up all properties and the database
@@ -152,6 +190,7 @@ namespace LiBeo
             DbConn.Close();
         }
 
+        #region enumerable methods
         /// <summary>
         /// Gets all selected mails and returns them
         /// </summary>
@@ -186,6 +225,7 @@ namespace LiBeo
                 }
             }
         }
+        #endregion
 
         #region VSTO generated code
 
