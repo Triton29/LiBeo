@@ -86,9 +86,7 @@ namespace LiBeo
         /// <param name="control"></param>
         public void SyncStopWords(Office.IRibbonControl control)
         {
-            Thread waitThread = ThisAddIn.ShowWaitWindow();
             ThisAddIn.SyncStopWords();
-            ThisAddIn.CloseWaitWindow(waitThread);
         }
 
         /// <summary>

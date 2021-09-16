@@ -358,7 +358,7 @@ namespace LiBeo
             Outlook.Folder trayFolder;
             try     // check if tray path exists
             {
-                trayFolder = ThisAddIn.GetFolderFromPath(ThisAddIn.GetSetting<string>("tray_folder"));
+                trayFolder = ThisAddIn.GetFolderFromPath(ThisAddIn.GetSetting<string>("tray_path"));
             }
             catch
             {

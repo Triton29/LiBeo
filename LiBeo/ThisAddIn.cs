@@ -18,9 +18,8 @@ namespace LiBeo
 {
     public partial class ThisAddIn
     {
-        public static string Version = "1.0";
+        public static string Version = "1.1";
         public static string DbPath = Properties.Settings.Default.DbPath;
-        public static string StopWordsPath { get; set; }
         public static Outlook.Folder RootFolder { get; set; }
         public static string EmailAddress { get; set; }
         public static string Name { get; set; }
@@ -47,7 +46,7 @@ namespace LiBeo
             if (GetSetting<int>("sync_db") == 1)
             {
                 SyncFolderStructure();
-                //SyncStopWords();
+                SyncStopWords();
             }
         }
 
@@ -77,11 +76,8 @@ namespace LiBeo
         /// <param name="waitThread">The wait thread returned by ShowWaitWindow() method</param>
         public static void CloseWaitWindow(Thread waitThread)
         {
-            try
-            {
-                waitThread.Abort();
-            }
-            catch { }
+            Thread.Sleep(100);
+            waitThread.Abort();
         }
         #endregion
 
@@ -103,10 +99,6 @@ namespace LiBeo
 
             // setup database
             SetupDatabase();
-
-            StopWordsPath = GetSetting<string>("stop_words_path");
-            if (!StopWordsPath.Contains("\\"))
-                StopWordsPath = AppDomain.CurrentDomain.BaseDirectory + StopWordsPath;
 
             // sync folder structure and stop words in new thread because it takes a long time
             ThreadStart threadStart = new ThreadStart(StartupThreadAction);
@@ -134,9 +126,13 @@ namespace LiBeo
         {
             try
             {
+                Thread waitThread = ShowWaitWindow();
+                string path = GetSetting<string>("stop_words_path");
+                if (!path.Contains("\\"))
+                    path = AppDomain.CurrentDomain.BaseDirectory + path;
                 SQLiteCommand dbCmd = new SQLiteCommand(DbConn);
 
-                System.IO.StreamReader file = new System.IO.StreamReader(StopWordsPath);
+                System.IO.StreamReader file = new System.IO.StreamReader(path);
                 string line;
                 while ((line = file.ReadLine()) != null)
                 {
@@ -145,6 +141,7 @@ namespace LiBeo
                     dbCmd.Prepare();
                     dbCmd.ExecuteNonQuery();
                 }
+                CloseWaitWindow(waitThread);
             }
             catch
             {

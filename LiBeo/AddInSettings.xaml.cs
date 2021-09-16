@@ -60,7 +60,6 @@ namespace LiBeo
             Properties.Settings.Default.DbPath = dbInput.Text;
             Properties.Settings.Default.Save();
             ThisAddIn.SetSetting<string>("stop_words_path", stopWordsInput.Text);
-            ThisAddIn.StopWordsPath = ThisAddIn.GetSetting<string>("stop_words_path");
             ThisAddIn.SetSetting<string>("tray_path", trayPathInput.Text);
             this.Close();
         }
