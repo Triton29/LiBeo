@@ -46,9 +46,7 @@ namespace LiBeo
             InitializeComponent();
 
             // display folder structure
-            ThisAddIn.DbConn.Open();
             ThisAddIn.Structure.DisplayInTreeView(ThisAddIn.DbConn, folderExplorer, ThisAddIn.Name, false);
-            ThisAddIn.DbConn.Close();
 
             // display quick access list
             DisplayQuickAccessList(quickAccessList);
@@ -108,7 +106,7 @@ namespace LiBeo
         /// <param name="folderId">The id of the folder in the database</param>
         private void MoveMails(IEnumerable<Outlook.MailItem> mails, int folderId)
         {
-            List<string> path = FolderStructure.GetPath(ThisAddIn.DbConn, folderId);
+            List<string> path = ThisAddIn.Structure.GetPath(ThisAddIn.DbConn, folderId);
             Outlook.Folder targetFolder = GetFolderFromPath(path);
             var waitThread = ThisAddIn.ShowWaitWindow();
             foreach (Outlook.MailItem mail in mails)
@@ -126,7 +124,6 @@ namespace LiBeo
         /// </summary>
         private void OKButton_Click(object sender, RoutedEventArgs e)
         {
-            ThisAddIn.DbConn.Open();
             int id = -1;
             if (tabConrol.SelectedIndex == 0)    // automatic sort
             {
@@ -135,7 +132,6 @@ namespace LiBeo
                     ListViewItem selectedItem = (ListViewItem)autoSortList.SelectedItem;
                     if (selectedItem == null)
                     {
-                        ThisAddIn.DbConn.Close();
                         return;
                     }
 
@@ -160,15 +156,33 @@ namespace LiBeo
                     TreeViewItem selectedItem = (TreeViewItem)folderExplorer.SelectedItem;
                     if (selectedItem == null)
                     {
-                        ThisAddIn.DbConn.Close();
                         return;
                     }
 
                     id = (int)selectedItem.Tag;
 
-                    MoveMails(ThisAddIn.GetSelectedMails(), id);
-
-                    this.Close();
+                    if (newFolderInput.Text != "")
+                    {
+                        Outlook.Folder newFolder = NewFolder(newFolderInput.Text, id);
+                        if(newFolder != null)
+                        {
+                            id = ThisAddIn.Structure.AddFolder(ThisAddIn.DbConn, newFolderInput.Text, id);
+                            MoveMails(ThisAddIn.GetSelectedMails(), id);
+                            this.Close();
+                        }
+                        else
+                        {
+                            MessageBox.Show("Ein Ordner mit diesem Namen exestiert bereits im ausgewählten Order.",
+                            "Ordner kann nicht erstellt werden",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
+                        }
+                    }
+                    else
+                    {
+                        MoveMails(ThisAddIn.GetSelectedMails(), id);
+                        this.Close();
+                    }
                 }
                 catch
                 {
@@ -185,7 +199,6 @@ namespace LiBeo
                     ListViewItem selectedItem = (ListViewItem)quickAccessList.SelectedItem;
                     if (selectedItem == null)
                     {
-                        ThisAddIn.DbConn.Close();
                         return;
                     }
 
@@ -203,8 +216,6 @@ namespace LiBeo
                         MessageBoxImage.Error);
                 }
             }
-
-            ThisAddIn.DbConn.Close();
         }
 
         /// <summary>
@@ -291,7 +302,6 @@ namespace LiBeo
         /// <param name="mail">The mail</param>
         public static void DisplayAutoSortList(ListView list, Outlook.MailItem mail)
         {
-            ThisAddIn.DbConn.Open();
             SQLiteCommand dbCmd = new SQLiteCommand(ThisAddIn.DbConn);
 
             SubjectToDb(dbCmd, mail.Subject, 0);
@@ -314,7 +324,7 @@ namespace LiBeo
             List<FolderSuggestion> sortedFolderSuggestions = folderSuggestions.OrderByDescending(x => x.Importance).ToList();
             foreach(FolderSuggestion suggestion in sortedFolderSuggestions)
             {
-                var path = FolderStructure.GetPath(ThisAddIn.DbConn, suggestion.FolderId);
+                var path = ThisAddIn.Structure.GetPath(ThisAddIn.DbConn, suggestion.FolderId);
                 ListViewItem item = new ListViewItem 
                 { 
                     Content = path.Count > 1 ? path[path.Count - 2] + @"\" + path[path.Count - 1] : path[path.Count - 1], 
@@ -322,8 +332,19 @@ namespace LiBeo
                 };
                 list.Items.Add(item);
             }
+        }
 
-            ThisAddIn.DbConn.Close();
+        public static Outlook.Folder NewFolder(string folderName, int parentId)
+        {
+            try
+            {
+                Outlook.Folder parent = GetFolderFromPath(ThisAddIn.Structure.GetPath(ThisAddIn.DbConn, parentId));
+                return (Outlook.Folder)parent.Folders.Add(folderName);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -337,7 +358,7 @@ namespace LiBeo
             Outlook.Folder trayFolder;
             try     // check if tray path exists
             {
-                trayFolder = ThisAddIn.GetFolderFromPath(Properties.Settings.Default.TrayPath);
+                trayFolder = ThisAddIn.GetFolderFromPath(ThisAddIn.GetSetting<string>("tray_folder"));
             }
             catch
             {
@@ -420,7 +441,6 @@ namespace LiBeo
         /// <param name="list">The list view where the folders are displayed</param>
         public static void DisplayQuickAccessList(ListView list)
         {
-            ThisAddIn.DbConn.Open();
             SQLiteCommand dbCmd = new SQLiteCommand(ThisAddIn.DbConn);
 
             dbCmd.CommandText = "SELECT * FROM quick_access_folders";
@@ -428,7 +448,7 @@ namespace LiBeo
             while (dataReader.Read())
             {
                 int id = dataReader.GetInt32(0);
-                List<string> path = FolderStructure.GetPath(ThisAddIn.DbConn, id);
+                List<string> path = ThisAddIn.Structure.GetPath(ThisAddIn.DbConn, id);
                 ListViewItem item = new ListViewItem() 
                 {
                     Content = path[path.Count - 1], 
@@ -436,7 +456,6 @@ namespace LiBeo
                 };
                 list.Items.Add(item);
             }
-            ThisAddIn.DbConn.Close();
         }
 
         /// <summary>
@@ -450,11 +469,10 @@ namespace LiBeo
                 SelectFolder targetFolderWindow = new SelectFolder() { Title = "Ordner auswählen, in den der/die Ordner verschoben werden" };
                 if(targetFolderWindow.ShowDialog() == false && !targetFolderWindow.Canceled)
                 {
-                    ThisAddIn.DbConn.Open();
                     SQLiteCommand dbCmd = new SQLiteCommand(ThisAddIn.DbConn);
                     foreach (int folderToMoveId in foldersToMoveWindow.SelectedFolderIds)
                     {
-                        Outlook.Folder folderToMove = GetFolderFromPath(FolderStructure.GetPath(ThisAddIn.DbConn, folderToMoveId));
+                        Outlook.Folder folderToMove = GetFolderFromPath(ThisAddIn.Structure.GetPath(ThisAddIn.DbConn, folderToMoveId));
                         Outlook.Folder targetFolder = GetFolderFromPath(targetFolderWindow.SelectedFolderPath);
                         folderToMove.MoveTo(targetFolder);
 
@@ -463,7 +481,6 @@ namespace LiBeo
                         dbCmd.Parameters.AddWithValue("@id", folderToMoveId);
                         dbCmd.ExecuteNonQuery();
                     }
-                    ThisAddIn.DbConn.Close();
                 }
             }
         }

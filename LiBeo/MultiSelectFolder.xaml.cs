@@ -40,9 +40,7 @@ namespace LiBeo
             InitializeComponent();
 
             // display folder structure in tree view
-            ThisAddIn.DbConn.Open();
             ThisAddIn.Structure.DisplayInTreeView(ThisAddIn.DbConn, folderExplorer, ThisAddIn.Name, true);
-            ThisAddIn.DbConn.Close();
         }
 
         /// <summary>

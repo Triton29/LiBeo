@@ -10,24 +10,45 @@
              WindowStartupLocation="CenterScreen"
              ResizeMode="NoResize">
     <StackPanel Margin="10">
-        <StackPanel Margin="20">
+        <StackPanel Margin="20"
+                    Width="400">
             <CheckBox x:Name="syncDBCheckBox"
                       Margin="0 5">
                 Datenbank beim Start von Outlook synchronisieren
             </CheckBox>
-            <StackPanel Margin="0 5"
-                        Orientation="Horizontal">
-                <Label>Ablage-Ordner:</Label>
-                <TextBox x:Name="trayPathInput"
-                         Width="200"
-                         VerticalAlignment="Center"/>
+            <DockPanel Margin="0 5">
+                <Label Width="100">Datenbank:</Label>
+                <Button x:Name="dbButton"
+                        Click="dbButton_Click"
+                        DockPanel.Dock="Right"
+                        Width="25"
+                        Padding="2"/>
+                <TextBox x:Name="dbInput"
+                         VerticalContentAlignment="Center"
+                         DockPanel.Dock="Left"/>
+            </DockPanel>
+            <DockPanel Margin="0 5">
+                <Label Width="100">Stop words Liste:</Label>
+                <Button x:Name="stopWordsButton"
+                        Click="stopWordsButton_Click"
+                        DockPanel.Dock="Right"
+                        Width="25"
+                        Padding="2"/>
+                <TextBox x:Name="stopWordsInput"
+                         VerticalContentAlignment="Center"
+                         DockPanel.Dock="Left"/>
+            </DockPanel>
+            <DockPanel Margin="0 5">
+                <Label Width="100">Ablage-Ordner:</Label>
                 <Button x:Name="trayPathButton"
                         Click="trayPathButton_Click"
-                        Width="26"
-                        Margin="5 0"
-                        Padding="3">
-                </Button>
-            </StackPanel>
+                        DockPanel.Dock="Right"
+                        Width="25"
+                        Padding="2"/>
+                <TextBox x:Name="trayPathInput"
+                         VerticalContentAlignment="Center"
+                         DockPanel.Dock="Left"/>
+            </DockPanel>
             <Button x:Name="quickAccessListButton"
                     Click="quickAccessListButton_Click"
                     HorizontalAlignment="Left"

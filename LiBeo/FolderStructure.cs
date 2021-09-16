@@ -156,12 +156,37 @@ namespace LiBeo
         }
 
         /// <summary>
+        /// Adds a folder to the folder structure
+        /// </summary>
+        /// <param name="conn">SQLite database connection</param>
+        /// <param name="folderName">The name of the new folder</param>
+        /// <param name="parentId">The parent id of the new folder</param>
+        /// <returns>The id of the new folder</returns>
+        public int AddFolder(SQLiteConnection conn, string folderName, int parentId)
+        {
+            SQLiteCommand cmd = new SQLiteCommand(conn);
+            cmd.CommandText = "INSERT OR IGNORE INTO folders (name, parent_id, got_deleted) VALUES (@name, @parent_id, 0) ";
+            cmd.Parameters.AddWithValue("@name", folderName);
+            cmd.Parameters.AddWithValue("@parent_id", parentId);
+            cmd.Prepare();
+            cmd.ExecuteNonQuery();
+
+            cmd.CommandText = "SELECT id FROM folders WHERE name=@name AND parent_id=@parent_id";
+            cmd.Parameters.AddWithValue("@name", folderName);
+            cmd.Parameters.AddWithValue("@parent_id", parentId);
+            cmd.Prepare();
+            SQLiteDataReader dataReader = cmd.ExecuteReader();
+            dataReader.Read();
+            return dataReader.GetInt32(0);
+        }
+
+        /// <summary>
         /// Gets the path of a folder in a folder structure saved in a database
         /// </summary>
         /// <param name="conn">SQLite database connection</param>
         /// <param name="folderId">The id of the folder in the database</param>
         /// <returns>The path of the folder in a list</returns>
-        public static List<string> GetPath(SQLiteConnection conn, int folderId)
+        public List<string> GetPath(SQLiteConnection conn, int folderId)
         {
             List<string> path = new List<string>();
             int parentId = folderId;

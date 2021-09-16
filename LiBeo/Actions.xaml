@@ -25,6 +25,11 @@
             </TabItem>
             <TabItem Header="Manuell einsortieren">
                 <StackPanel>
+                    <DockPanel>
+                        <Label>Neuer Ordner:</Label>
+                        <TextBox x:Name="newFolderInput" 
+                                 VerticalContentAlignment="Center"/>
+                    </DockPanel>
                     <TreeView x:Name="folderExplorer" 
                               MaxHeight="300"
                               BorderThickness="0"

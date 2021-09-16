@@ -2,14 +2,8 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="LiBeo.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="SyncFolderStructureOnStartup" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="SyncedStopWords" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="TrayPath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">\Ablage</Value>
+    <Setting Name="DbPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">data.db</Value>
     </Setting>
   </Settings>
 </SettingsFile>

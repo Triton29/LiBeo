@@ -19,9 +19,8 @@ namespace LiBeo
     public partial class ThisAddIn
     {
         public static string Version = "1.0";
-        public static string DbPath = AppDomain.CurrentDomain.BaseDirectory + @"\data.db";
-        public static string StopWordsPath = AppDomain.CurrentDomain.BaseDirectory + @"\stop_words.txt";
-
+        public static string DbPath = Properties.Settings.Default.DbPath;
+        public static string StopWordsPath { get; set; }
         public static Outlook.Folder RootFolder { get; set; }
         public static string EmailAddress { get; set; }
         public static string Name { get; set; }
@@ -45,15 +44,10 @@ namespace LiBeo
             Thread.Sleep(new TimeSpan(0, 0, 1));
 
             // synchronize folder structure if enabled
-            if (Properties.Settings.Default.SyncFolderStructureOnStartup)
-                SyncFolderStructure();
-
-            // synchronizes stop words if not done yet
-            if (!Properties.Settings.Default.SyncedStopWords)
+            if (GetSetting<int>("sync_db") == 1)
             {
-                SyncStopWords();
-                Properties.Settings.Default.SyncedStopWords = true;
-                Properties.Settings.Default.Save();
+                SyncFolderStructure();
+                //SyncStopWords();
             }
         }
 
@@ -97,14 +91,22 @@ namespace LiBeo
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
             // initialize properties
-            RootFolder = (Outlook.Folder) this.Application.ActiveExplorer().Session.DefaultStore.GetRootFolder();
-            EmailAddress = this.Application.ActiveExplorer().Session.CurrentUser.Address;
-            Name = this.Application.Session.Accounts[1].DisplayName;
+            RootFolder = (Outlook.Folder)Application.ActiveExplorer().Session.DefaultStore.GetRootFolder();
+            EmailAddress = Application.ActiveExplorer().Session.CurrentUser.Address;
+            Name = Application.Session.Accounts[1].DisplayName;
             Structure = new FolderStructure(RootFolder);
+
+            if (!DbPath.Contains("\\"))
+                DbPath = AppDomain.CurrentDomain.BaseDirectory + DbPath;
             DbConn = new SQLiteConnection("Data Source=" + DbPath);
+            DbConn.Open();
 
             // setup database
             SetupDatabase();
+
+            StopWordsPath = GetSetting<string>("stop_words_path");
+            if (!StopWordsPath.Contains("\\"))
+                StopWordsPath = AppDomain.CurrentDomain.BaseDirectory + StopWordsPath;
 
             // sync folder structure and stop words in new thread because it takes a long time
             ThreadStart threadStart = new ThreadStart(StartupThreadAction);
@@ -114,7 +116,7 @@ namespace LiBeo
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
         {
-            
+            DbConn.Close();
         }
 
         /// <summary>
@@ -122,9 +124,7 @@ namespace LiBeo
         /// </summary>
         public static void SyncFolderStructure()
         {
-            DbConn.Open();
             Structure.SaveToDB(DbConn);
-            DbConn.Close();
         }
 
         /// <summary>
@@ -132,19 +132,27 @@ namespace LiBeo
         /// </summary>
         public static void SyncStopWords()
         {
-            DbConn.Open();
-            SQLiteCommand dbCmd = new SQLiteCommand(DbConn);
+            try
+            {
+                SQLiteCommand dbCmd = new SQLiteCommand(DbConn);
 
-            System.IO.StreamReader file = new System.IO.StreamReader(StopWordsPath);
-            string line;
-            while((line = file.ReadLine()) != null){
-                dbCmd.CommandText = "INSERT OR IGNORE INTO stop_words VALUES (@word)";
-                dbCmd.Parameters.AddWithValue("@word", line);
-                dbCmd.Prepare();
-                dbCmd.ExecuteNonQuery();
+                System.IO.StreamReader file = new System.IO.StreamReader(StopWordsPath);
+                string line;
+                while ((line = file.ReadLine()) != null)
+                {
+                    dbCmd.CommandText = "INSERT OR IGNORE INTO stop_words VALUES (@word)";
+                    dbCmd.Parameters.AddWithValue("@word", line);
+                    dbCmd.Prepare();
+                    dbCmd.ExecuteNonQuery();
+                }
             }
-
-            DbConn.Close();
+            catch
+            {
+                MessageBox.Show("Beim Synchronisieren der Stop Words ist etwas schiefgelaufen. Bitte überprüfen Sie den Pfad.",
+                            "Stop Words können nicht synchronisiert werden",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
+            }
         }
 
         /// <summary>
@@ -166,9 +174,8 @@ namespace LiBeo
         /// <summary>
         /// Sets up the database for quick access list, folder structure, stop words and folder
         /// </summary>
-        public static void SetupDatabase()
+        static void SetupDatabase()
         {
-            DbConn.Open();
             SQLiteCommand dbCmd = new SQLiteCommand(DbConn);
 
             dbCmd.CommandText = "CREATE TABLE IF NOT EXISTS quick_access_folders (folder int UNIQUE)";
@@ -187,7 +194,68 @@ namespace LiBeo
             dbCmd.CommandText = "CREATE TABLE IF NOT EXISTS current_mail_subject (folder int, word varchar(255) UNIQUE)";
             dbCmd.ExecuteNonQuery();
 
-            DbConn.Close();
+            dbCmd.CommandText = "CREATE TABLE IF NOT EXISTS settings (name varchar(255) UNIQUE, value_int int, value_str varchar(255))";
+            dbCmd.ExecuteNonQuery();
+            // settings
+            dbCmd.CommandText = "INSERT OR IGNORE INTO settings (name, value_int) VALUES ('sync_db', 1)";
+            dbCmd.ExecuteNonQuery();
+            dbCmd.CommandText = "INSERT OR IGNORE INTO settings (name, value_int, value_str) VALUES ('stop_words_path', -1, 'stop_words.txt')";
+            dbCmd.ExecuteNonQuery();
+            dbCmd.CommandText = "INSERT OR IGNORE INTO settings (name, value_int, value_str) VALUES ('tray_path', -1, '\\Ablage')";
+            dbCmd.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// Gets a setting saved in the database
+        /// </summary>
+        /// <typeparam name="T">The datatype of the setting (int or string)</typeparam>
+        /// <param name="settingName">The name of the setting</param>
+        /// <returns>The value of the setting as given datatype</returns>
+        public static T GetSetting<T>(string settingName)
+        {
+            SQLiteCommand dbCmd = new SQLiteCommand(DbConn);
+            dbCmd.CommandText = "SELECT value_int, value_str FROM settings WHERE name=@name";
+            dbCmd.Parameters.AddWithValue("name", settingName);
+            dbCmd.Prepare();
+            SQLiteDataReader dataReader = dbCmd.ExecuteReader();
+            if (dataReader.Read())
+            {
+                if(dataReader.GetInt32(0) == -1)
+                {
+                    return (T) Convert.ChangeType(dataReader.GetString(1), typeof(T));
+                }
+                else
+                {
+                    return (T)Convert.ChangeType(dataReader.GetInt32(0), typeof(T));
+                }
+            }
+            return default(T);
+        }
+        /// <summary>
+        /// Sets a setting saved in the database to a new value
+        /// </summary>
+        /// <typeparam name="T">The datatype of the setting (int or string)</typeparam>
+        /// <param name="settingName">The name of the setting</param>
+        /// <param name="value">The new value as given datatype</param>
+        public static void SetSetting<T>(string settingName, T value)
+        {
+            SQLiteCommand dbCmd = new SQLiteCommand(DbConn);
+            if(value is int)
+            {
+                dbCmd.CommandText = "UPDATE settings SET value_int=@value WHERE name=@name";
+                dbCmd.Parameters.AddWithValue("@value", value);
+                dbCmd.Parameters.AddWithValue("@name", settingName);
+                dbCmd.Prepare();
+                dbCmd.ExecuteNonQuery();
+            }
+            if(value is string)
+            {
+                dbCmd.CommandText = "UPDATE settings SET value_str=@value WHERE name=@name";
+                dbCmd.Parameters.AddWithValue("@value", value);
+                dbCmd.Parameters.AddWithValue("@name", settingName);
+                dbCmd.Prepare();
+                dbCmd.ExecuteNonQuery();
+            }
         }
 
         #region enumerable methods

@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Forms;
 using System.Data.SQLite;
 
 namespace LiBeo
@@ -26,10 +27,21 @@ namespace LiBeo
             InitializeComponent();
 
             // display current settings
-            syncDBCheckBox.IsChecked = Properties.Settings.Default.SyncFolderStructureOnStartup;
-            trayPathInput.Text = Properties.Settings.Default.TrayPath;
+            if (ThisAddIn.GetSetting<int>("sync_db") == 1)
+                syncDBCheckBox.IsChecked = true;
+            dbInput.Text = Properties.Settings.Default.DbPath;
+            stopWordsInput.Text = ThisAddIn.GetSetting<string>("stop_words_path");
+            trayPathInput.Text = ThisAddIn.GetSetting<string>("tray_path");
 
             // add images
+            dbButton.Content = new Image
+            {
+                Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\img\folder.png"))
+            };
+            stopWordsButton.Content = new Image
+            {
+                Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\img\folder.png"))
+            };
             trayPathButton.Content = new Image
             {
                 Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\img\folder.png"))
@@ -41,9 +53,15 @@ namespace LiBeo
         /// </summary>
         private void OKButton_Click(object sender, RoutedEventArgs e)
         {
-            Properties.Settings.Default.SyncFolderStructureOnStartup = (bool)syncDBCheckBox.IsChecked;
-            Properties.Settings.Default.TrayPath = trayPathInput.Text;
+            if(syncDBCheckBox.IsChecked == true)
+                ThisAddIn.SetSetting<int>("sync_db", 1);
+            else
+                ThisAddIn.SetSetting<int>("sync_db", 0);
+            Properties.Settings.Default.DbPath = dbInput.Text;
             Properties.Settings.Default.Save();
+            ThisAddIn.SetSetting<string>("stop_words_path", stopWordsInput.Text);
+            ThisAddIn.StopWordsPath = ThisAddIn.GetSetting<string>("stop_words_path");
+            ThisAddIn.SetSetting<string>("tray_path", trayPathInput.Text);
             this.Close();
         }
 
@@ -78,7 +96,6 @@ namespace LiBeo
         /// </summary>
         private void quickAccessListButton_Click(object sender, RoutedEventArgs e)
         {
-            ThisAddIn.DbConn.Open();
             SQLiteCommand DbCmd = new SQLiteCommand(ThisAddIn.DbConn);
 
             DbCmd.CommandText = "SELECT * FROM quick_access_folders";
@@ -90,14 +107,11 @@ namespace LiBeo
             }
             dataReader.Close();
 
-            ThisAddIn.DbConn.Close();
-
             MultiSelectFolder multiSelectFolderWindow = new MultiSelectFolder();
             multiSelectFolderWindow.PreSelectedFolderIds = ids;
 
             if (multiSelectFolderWindow.ShowDialog() == false && !multiSelectFolderWindow.Canceled)
             {
-                ThisAddIn.DbConn.Open();
                 DbCmd.CommandText = "DELETE FROM quick_access_folders";
                 DbCmd.ExecuteNonQuery();
 
@@ -108,7 +122,26 @@ namespace LiBeo
                     DbCmd.Prepare();
                     DbCmd.ExecuteNonQuery();
                 }
-                ThisAddIn.DbConn.Close();
+            }
+        }
+
+        private void stopWordsButton_Click(object sender, RoutedEventArgs e)
+        {
+            FolderBrowserDialog fbd = new FolderBrowserDialog();
+            DialogResult res = fbd.ShowDialog();
+            if (!string.IsNullOrWhiteSpace(fbd.SelectedPath))
+            {
+                stopWordsInput.Text = (fbd.SelectedPath + @"\stop_words.txt");
+            }
+        }
+
+        private void dbButton_Click(object sender, RoutedEventArgs e)
+        {
+            FolderBrowserDialog fbd = new FolderBrowserDialog();
+            DialogResult res = fbd.ShowDialog();
+            if (!string.IsNullOrWhiteSpace(fbd.SelectedPath))
+            {
+                dbInput.Text = (fbd.SelectedPath + @"\data.db");
             }
         }
     }

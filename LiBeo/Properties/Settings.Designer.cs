@@ -25,37 +25,13 @@ namespace LiBeo.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool SyncFolderStructureOnStartup {
+        [global::System.Configuration.DefaultSettingValueAttribute("data.db")]
+        public string DbPath {
             get {
-                return ((bool)(this["SyncFolderStructureOnStartup"]));
+                return ((string)(this["DbPath"]));
             }
             set {
-                this["SyncFolderStructureOnStartup"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool SyncedStopWords {
-            get {
-                return ((bool)(this["SyncedStopWords"]));
-            }
-            set {
-                this["SyncedStopWords"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("\\Ablage")]
-        public string TrayPath {
-            get {
-                return ((string)(this["TrayPath"]));
-            }
-            set {
-                this["TrayPath"] = value;
+                this["DbPath"] = value;
             }
         }
     }

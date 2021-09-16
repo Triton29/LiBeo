@@ -31,9 +31,7 @@ namespace LiBeo
             SelectedFolderPath = new List<string>();
 
             // display folder structure in tree view
-            ThisAddIn.DbConn.Open();
             ThisAddIn.Structure.DisplayInTreeView(ThisAddIn.DbConn, folderExplorer, ThisAddIn.Name, false);
-            ThisAddIn.DbConn.Close();
         }
 
         /// <summary>
@@ -70,11 +68,9 @@ namespace LiBeo
         /// </summary>
         private void folderExplorer_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            ThisAddIn.DbConn.Open();
             int id = (int)((TreeViewItem)folderExplorer.SelectedItem).Tag;
             SelectedFolderId = id;
-            SelectedFolderPath = FolderStructure.GetPath(ThisAddIn.DbConn, id);
-            ThisAddIn.DbConn.Close();
+            SelectedFolderPath = ThisAddIn.Structure.GetPath(ThisAddIn.DbConn, id);
         }
     }
 }
