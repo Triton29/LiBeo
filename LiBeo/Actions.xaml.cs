@@ -108,7 +108,8 @@ namespace LiBeo
         {
             List<string> path = ThisAddIn.Structure.GetPath(ThisAddIn.DbConn, folderId);
             Outlook.Folder targetFolder = GetFolderFromPath(path);
-            var waitThread = ThisAddIn.ShowWaitWindow();
+            WaitWindow waitWindow = ThisAddIn.ShowWaitWindow();
+
             foreach (Outlook.MailItem mail in mails)
             {
                 mail.Move(targetFolder);
@@ -116,7 +117,7 @@ namespace LiBeo
                 if (learnNothingCheckBox.IsChecked == false)
                     LearnTags(mail.Subject, folderId);
             }
-            ThisAddIn.CloseWaitWindow(waitThread);
+            ThisAddIn.CloseWaitWindow(waitWindow);
         }
 
         /// <summary>

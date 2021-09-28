@@ -50,34 +50,24 @@ namespace LiBeo
             }
         }
 
-        /// <summary>
-        /// Runs action for the WaitThread; creates a wait window
-        /// </summary>
-        static void WaitThreadAction()
+        public static WaitWindow ShowWaitWindow()
         {
-            WaitWindow waitWindow = new WaitWindow();
-            waitWindow.ShowDialog();
-        }
-        /// <summary>
-        /// Shows a wait window until CloseWaitWindow() method is called
-        /// </summary>
-        /// <returns>The wait thread (neccessary for closing the window)</returns>
-        public static Thread ShowWaitWindow()
-        {
-            ThreadStart threadStart = new ThreadStart(WaitThreadAction);
-            Thread waitThread = new Thread(threadStart);
+            WaitWindow waitWindow = null;
+            Thread waitThread = new Thread(() => 
+            {
+                waitWindow = new WaitWindow();
+                waitWindow.Show();
+                System.Windows.Threading.Dispatcher.Run();
+            });
             waitThread.SetApartmentState(ApartmentState.STA);
+            waitThread.IsBackground = true;
             waitThread.Start();
-            return waitThread;
+            Thread.Sleep(40);
+            return waitWindow;
         }
-        /// <summary>
-        /// Closes the wait window created in a wait thread
-        /// </summary>
-        /// <param name="waitThread">The wait thread returned by ShowWaitWindow() method</param>
-        public static void CloseWaitWindow(Thread waitThread)
+        public static void CloseWaitWindow(WaitWindow waitWindow)
         {
-            Thread.Sleep(100);
-            waitThread.Abort();
+            waitWindow.Dispatcher.Invoke(() => { waitWindow.Close(); });
         }
         #endregion
 
@@ -86,24 +76,34 @@ namespace LiBeo
         /// </summary>
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
-            // initialize properties
-            RootFolder = (Outlook.Folder)Application.ActiveExplorer().Session.DefaultStore.GetRootFolder();
-            EmailAddress = Application.ActiveExplorer().Session.CurrentUser.Address;
-            Name = Application.Session.Accounts[1].DisplayName;
-            Structure = new FolderStructure(RootFolder);
+            try
+            {
+                // initialize properties
+                RootFolder = (Outlook.Folder)Application.ActiveExplorer().Session.DefaultStore.GetRootFolder();
+                EmailAddress = Application.ActiveExplorer().Session.CurrentUser.Address;
+                Name = Application.Session.Accounts[1].DisplayName;
+                Structure = new FolderStructure(RootFolder);
 
-            if (!DbPath.Contains("\\"))
-                DbPath = AppDomain.CurrentDomain.BaseDirectory + DbPath;
-            DbConn = new SQLiteConnection("Data Source=" + DbPath);
-            DbConn.Open();
+                if (!DbPath.Contains("\\"))
+                    DbPath = AppDomain.CurrentDomain.BaseDirectory + DbPath;
+                DbConn = new SQLiteConnection("Data Source=" + DbPath);
+                DbConn.Open();
 
-            // setup database
-            SetupDatabase();
+                // setup database
+                SetupDatabase();
 
-            // sync folder structure and stop words in new thread because it takes a long time
-            ThreadStart threadStart = new ThreadStart(StartupThreadAction);
-            Thread startupThread = new Thread(threadStart);
-            startupThread.Start();
+                // sync folder structure and stop words in new thread because it takes a long time
+                ThreadStart threadStart = new ThreadStart(StartupThreadAction);
+                Thread startupThread = new Thread(threadStart);
+                startupThread.Start();
+            }
+            catch
+            {
+                MessageBox.Show("Bitte überprüfen Sie die Netzwerkverbindung",
+                    "LiBeo konnte nicht geladen werden",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
@@ -126,7 +126,6 @@ namespace LiBeo
         {
             try
             {
-                Thread waitThread = ShowWaitWindow();
                 string path = GetSetting<string>("stop_words_path");
                 if (!path.Contains("\\"))
                     path = AppDomain.CurrentDomain.BaseDirectory + path;
@@ -141,7 +140,6 @@ namespace LiBeo
                     dbCmd.Prepare();
                     dbCmd.ExecuteNonQuery();
                 }
-                CloseWaitWindow(waitThread);
             }
             catch
             {

@@ -75,9 +75,9 @@ namespace LiBeo
         /// <param name="control">The button which calls this function</param>
         public void SyncFolderStructure(Office.IRibbonControl control)
         {
-            Thread waitThread = ThisAddIn.ShowWaitWindow();
+            WaitWindow waitWindow = ThisAddIn.ShowWaitWindow();
             ThisAddIn.SyncFolderStructure();
-            ThisAddIn.CloseWaitWindow(waitThread);
+            ThisAddIn.CloseWaitWindow(waitWindow);
         }
 
         /// <summary>
@@ -86,7 +86,9 @@ namespace LiBeo
         /// <param name="control"></param>
         public void SyncStopWords(Office.IRibbonControl control)
         {
+            WaitWindow waitWindow = ThisAddIn.ShowWaitWindow();
             ThisAddIn.SyncStopWords();
+            ThisAddIn.CloseWaitWindow(waitWindow);
         }
 
         /// <summary>

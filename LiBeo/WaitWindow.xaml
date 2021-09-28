@@ -4,12 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:LiBeo"
+             xmlns:gif="http://wpfanimatedgif.codeplex.com"
              mc:Ignorable="d"
              SizeToContent="Height"
              Width="300"
              Title="LiBeo"
              WindowStartupLocation="CenterScreen"
-             ResizeMode="NoResize">
+             ResizeMode="NoResize"
+             x:Name="_this">
     <StackPanel>
         <Label FontSize="16"
                 HorizontalAlignment="Center"
@@ -18,26 +20,10 @@
             Bitte warten ...
         </Label>
 
-        <Image Width="50"
-               Height="50"
-               RenderTransformOrigin="0.5, 0.5"
-               x:Name="waiting"
-               Margin="0 0 0 30">
-            <Image.RenderTransform>
-                <RotateTransform x:Name="noFreeze" />
-            </Image.RenderTransform>
-            <Image.Triggers>
-                <EventTrigger RoutedEvent="Loaded">
-                    <BeginStoryboard>
-                        <Storyboard>
-                            <DoubleAnimation
-                        Storyboard.TargetProperty="(Image.RenderTransform).(RotateTransform.Angle)"
-                        To="360" Duration="0:0:2" RepeatBehavior="Forever" />
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-            </Image.Triggers>
-        </Image>
+        <Image x:Name="loading"
+               Margin="0 0 0 30"
+               Width="50"
+               Height="50"/>
 
     </StackPanel>
 </Window>

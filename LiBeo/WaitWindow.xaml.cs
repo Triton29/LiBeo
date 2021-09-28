@@ -21,11 +21,11 @@ namespace LiBeo
     /// </summary>
     public partial class WaitWindow : Window
     {
+        string loadingSource = AppDomain.CurrentDomain.BaseDirectory + @"img\loading.gif";
         public WaitWindow()
         {
             InitializeComponent();
-
-            waiting.Source = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + @"\img\waiting.png"));
+            WpfAnimatedGif.ImageBehavior.SetAnimatedSource(loading, new BitmapImage(new Uri(loadingSource)));
         }
     }
 }

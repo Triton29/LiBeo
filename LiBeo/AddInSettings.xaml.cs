@@ -126,21 +126,23 @@ namespace LiBeo
 
         private void stopWordsButton_Click(object sender, RoutedEventArgs e)
         {
-            FolderBrowserDialog fbd = new FolderBrowserDialog();
-            DialogResult res = fbd.ShowDialog();
-            if (!string.IsNullOrWhiteSpace(fbd.SelectedPath))
+            OpenFileDialog fd = new OpenFileDialog();
+            DialogResult res = fd.ShowDialog();
+            fd.Filter = "Text|*.txt";
+            if (!string.IsNullOrWhiteSpace(fd.FileName))
             {
-                stopWordsInput.Text = (fbd.SelectedPath + @"\stop_words.txt");
+                stopWordsInput.Text = (fd.FileName);
             }
         }
 
         private void dbButton_Click(object sender, RoutedEventArgs e)
         {
-            FolderBrowserDialog fbd = new FolderBrowserDialog();
-            DialogResult res = fbd.ShowDialog();
-            if (!string.IsNullOrWhiteSpace(fbd.SelectedPath))
+            OpenFileDialog fd = new OpenFileDialog();
+            fd.Filter = "DB-Datei|*.db";
+            DialogResult res = fd.ShowDialog();
+            if (!string.IsNullOrWhiteSpace(fd.FileName))
             {
-                dbInput.Text = (fbd.SelectedPath + @"\data.db");
+                dbInput.Text = (fd.FileName);
             }
         }
     }
