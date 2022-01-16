@@ -21,7 +21,7 @@ namespace LiBeo
     /// </summary>
     public partial class WaitWindow : Window
     {
-        string loadingSource = AppDomain.CurrentDomain.BaseDirectory + @"img\loading.gif";
+        string loadingSource = AppDomain.CurrentDomain.BaseDirectory + @"\img\loading.gif";
         public WaitWindow()
         {
             InitializeComponent();

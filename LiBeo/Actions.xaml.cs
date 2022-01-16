@@ -89,7 +89,7 @@ namespace LiBeo
         /// </summary>
         /// <param name="path">The folder path as a list</param>
         /// <returns>The wanted outlook folder</returns>
-        static Outlook.Folder GetFolderFromPath(List<string> path)
+        private static Outlook.Folder GetFolderFromPath(List<string> path)
         {
             Outlook.Folder folder = ThisAddIn.RootFolder;
             foreach(string folderName in path)
@@ -108,7 +108,7 @@ namespace LiBeo
         {
             List<string> path = ThisAddIn.Structure.GetPath(ThisAddIn.DbConn, folderId);
             Outlook.Folder targetFolder = GetFolderFromPath(path);
-            WaitWindow waitWindow = ThisAddIn.ShowWaitWindow();
+            WaitWindow waitWindow = ThisAddIn.CreateWaitWindow();
 
             foreach (Outlook.MailItem mail in mails)
             {
@@ -126,9 +126,9 @@ namespace LiBeo
         private void OKButton_Click(object sender, RoutedEventArgs e)
         {
             int id = -1;
-            if (tabConrol.SelectedIndex == 0)    // automatic sort
+            try
             {
-                try
+                if (tabConrol.SelectedIndex == 0)    // automatic sort
                 {
                     ListViewItem selectedItem = (ListViewItem)autoSortList.SelectedItem;
                     if (selectedItem == null)
@@ -142,17 +142,7 @@ namespace LiBeo
 
                     this.Close();
                 }
-                catch
-                {
-                    MessageBox.Show("Der ausgewählte Ordner exestiert nicht mehr. Bitte synchronisieren Sie die Ordnerstruktur.",
-                        "Ordner exestiert nicht mehr",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                }
-            }
-            if(tabConrol.SelectedIndex == 1)    // manual sort
-            {
-                try
+                if (tabConrol.SelectedIndex == 1)    // manual sort
                 {
                     TreeViewItem selectedItem = (TreeViewItem)folderExplorer.SelectedItem;
                     if (selectedItem == null)
@@ -165,7 +155,7 @@ namespace LiBeo
                     if (newFolderInput.Text != "")
                     {
                         Outlook.Folder newFolder = NewFolder(newFolderInput.Text, id);
-                        if(newFolder != null)
+                        if (newFolder != null)
                         {
                             id = ThisAddIn.Structure.AddFolder(ThisAddIn.DbConn, newFolderInput.Text, id);
                             MoveMails(ThisAddIn.GetSelectedMails(), id);
@@ -185,17 +175,7 @@ namespace LiBeo
                         this.Close();
                     }
                 }
-                catch
-                {
-                    MessageBox.Show("Der ausgewählte Ordner exestiert nicht mehr. Bitte synchronisieren Sie die Ordnerstruktur.",
-                        "Ordner exestiert nicht mehr",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                }
-            }
-            if(tabConrol.SelectedIndex == 2)    // quick access list sort
-            {
-                try
+                if (tabConrol.SelectedIndex == 2)    // quick access list sort
                 {
                     ListViewItem selectedItem = (ListViewItem)quickAccessList.SelectedItem;
                     if (selectedItem == null)
@@ -209,13 +189,20 @@ namespace LiBeo
 
                     this.Close();
                 }
-                catch
-                {
-                    MessageBox.Show("Der ausgewählte Ordner exestiert nicht mehr. Bitte synchronisieren Sie die Ordnerstruktur.",
-                        "Ordner exestiert nicht mehr",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                }
+            }
+            catch(System.Runtime.InteropServices.COMException)
+            {
+                MessageBox.Show("Der ausgewählte Ordner exestiert nicht mehr. Bitte synchronisieren Sie die Ordnerstruktur.",
+                    "Ordner exestiert nicht mehr",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Beim Verschieben ist etwas schief gelaufen: " + ex,
+                    "E-Mails konnten nicht verschoben werden",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 

@@ -19,7 +19,7 @@ namespace LiBeo
     public partial class ThisAddIn
     {
         public static string Version = "1.1";
-        public static string DbPath = Properties.Settings.Default.DbPath;
+        public static string DbPath { get; set; }
         public static Outlook.Folder RootFolder { get; set; }
         public static string EmailAddress { get; set; }
         public static string Name { get; set; }
@@ -45,12 +45,16 @@ namespace LiBeo
             // synchronize folder structure if enabled
             if (GetSetting<int>("sync_db") == 1)
             {
-                SyncFolderStructure();
-                SyncStopWords();
+                SyncFolderStructure(false);
+                SyncStopWords(false);
             }
         }
 
-        public static WaitWindow ShowWaitWindow()
+        /// <summary>
+        /// Creates a wait window running in another thread
+        /// </summary>
+        /// <returns>The created wait window</returns>
+        public static WaitWindow CreateWaitWindow()
         {
             WaitWindow waitWindow = null;
             Thread waitThread = new Thread(() => 
@@ -65,9 +69,24 @@ namespace LiBeo
             Thread.Sleep(40);
             return waitWindow;
         }
-        public static void CloseWaitWindow(WaitWindow waitWindow)
+        /// <summary>
+        /// Closes a wait window running in another thread
+        /// </summary>
+        /// <param name="waitWindow">The wait window that should be closed</param>
+        /// <returns>If the wait window could be closed</returns>
+        public static bool CloseWaitWindow(WaitWindow waitWindow)
         {
-            waitWindow.Dispatcher.Invoke(() => { waitWindow.Close(); });
+            if (waitWindow == null)
+                return false;
+            try
+            {
+                waitWindow.Dispatcher.Invoke(() => { waitWindow.Close(); });
+                return true;
+            }
+            catch
+            {
+                return false; 
+            }
         }
         #endregion
 
@@ -78,7 +97,8 @@ namespace LiBeo
         {
             try
             {
-                // initialize properties
+            // initialize properties
+                DbPath = Properties.Settings.Default.DbPath;
                 RootFolder = (Outlook.Folder)Application.ActiveExplorer().Session.DefaultStore.GetRootFolder();
                 EmailAddress = Application.ActiveExplorer().Session.CurrentUser.Address;
                 Name = Application.Session.Accounts[1].DisplayName;
@@ -97,7 +117,7 @@ namespace LiBeo
                 Thread startupThread = new Thread(threadStart);
                 startupThread.Start();
             }
-            catch
+            catch (System.Runtime.InteropServices.COMException)
             {
                 MessageBox.Show("Bitte überprüfen Sie die Netzwerkverbindung",
                     "LiBeo konnte nicht geladen werden",
@@ -106,6 +126,9 @@ namespace LiBeo
             }
         }
 
+        /// <summary>
+        /// Called when Add-In shuts down; closes db connection
+        /// </summary>
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
         {
             DbConn.Close();
@@ -114,16 +137,25 @@ namespace LiBeo
         /// <summary>
         /// Synchronizes the database where the folder structure is saved with the current folder structure
         /// </summary>
-        public static void SyncFolderStructure()
+        public static void SyncFolderStructure(bool createWaitWindow=true)
         {
+            WaitWindow waitWindow = null;
+            if (createWaitWindow)
+                waitWindow = CreateWaitWindow();
             Structure.SaveToDB(DbConn);
+            if (createWaitWindow)
+                CloseWaitWindow(waitWindow);
         }
 
         /// <summary>
         /// Synchronizes the database with the stop words list (stop_words.txt)
+        /// <param name="createWaitWindow">If a wait window should be created</param>
         /// </summary>
-        public static void SyncStopWords()
+        public static void SyncStopWords(bool createWaitWindow=true)
         {
+            WaitWindow waitWindow = null;
+            if(createWaitWindow)
+                waitWindow = CreateWaitWindow();
             try
             {
                 string path = GetSetting<string>("stop_words_path");
@@ -140,9 +172,14 @@ namespace LiBeo
                     dbCmd.Prepare();
                     dbCmd.ExecuteNonQuery();
                 }
+
+                if(createWaitWindow)
+                    CloseWaitWindow(waitWindow);
             }
-            catch
+            catch (System.IO.FileNotFoundException)
             {
+                if (createWaitWindow)
+                    CloseWaitWindow(waitWindow);
                 MessageBox.Show("Beim Synchronisieren der Stop Words ist etwas schiefgelaufen. Bitte überprüfen Sie den Pfad.",
                             "Stop Words können nicht synchronisiert werden",
                             MessageBoxButton.OK,
