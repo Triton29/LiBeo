@@ -437,9 +437,10 @@ namespace LiBeo
             {
                 int id = dataReader.GetInt32(0);
                 List<string> path = ThisAddIn.Structure.GetPath(ThisAddIn.DbConn, id);
+                int pathItems = path.Count();
                 ListViewItem item = new ListViewItem() 
                 {
-                    Content = path[path.Count - 1], 
+                    Content = pathItems > 1 ? path[pathItems - 2] + "\\" + path[pathItems - 1] : path[pathItems - 1], 
                     Tag = id
                 };
                 list.Items.Add(item);
