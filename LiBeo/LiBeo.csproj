@@ -203,12 +203,18 @@
     <Compile Include="AddInSettings.xaml.cs">
       <DependentUpon>AddInSettings.xaml</DependentUpon>
     </Compile>
+    <Compile Include="FolderList.xaml.cs">
+      <DependentUpon>FolderList.xaml</DependentUpon>
+    </Compile>
     <Compile Include="FolderStructure.cs" />
     <Compile Include="MultiSelectFolder.xaml.cs">
       <DependentUpon>MultiSelectFolder.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SearchFolderWindow.xaml.cs">
+      <DependentUpon>SearchFolderWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="SelectFolder.xaml.cs">
       <DependentUpon>SelectFolder.xaml</DependentUpon>
@@ -265,7 +271,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="FolderList.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MultiSelectFolder.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SearchFolderWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

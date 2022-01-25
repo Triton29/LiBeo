@@ -88,12 +88,17 @@ namespace LiBeo
         }
 
         /// <summary>
-        /// 
+        /// Creates a window where a folder can be moved into another folder
         /// </summary>
         /// <param name="control">The button which calls this function</param>
         public void MoveFolder(Office.IRibbonControl control)
         {
             Actions.MoveFolder();
+        }
+
+        public void SearchFolder(Office.IRibbonControl control)
+        {
+            Actions.SearchFolder();
         }
 
         /// <summary>

@@ -48,6 +48,10 @@ namespace LiBeo
             // display folder structure
             ThisAddIn.Structure.DisplayInTreeView(ThisAddIn.DbConn, folderExplorer, ThisAddIn.Name, false);
 
+            // hide search suggestion list
+            searchSuggestions.Visibility = Visibility.Collapsed;
+            searchSuggestions.list.BorderThickness = new Thickness(0);
+
             // display quick access list
             DisplayQuickAccessList(quickAccessList);
             if (quickAccessList.Items.Count == 0)
@@ -145,12 +149,13 @@ namespace LiBeo
                 if (tabConrol.SelectedIndex == 1)    // manual sort
                 {
                     TreeViewItem selectedItem = (TreeViewItem)folderExplorer.SelectedItem;
-                    if (selectedItem == null)
+                    ListViewItem selectedSuggestedItem = (ListViewItem)searchSuggestions.SelectedItem;
+                    if (selectedItem == null && selectedSuggestedItem == null)
                     {
                         return;
                     }
 
-                    id = (int)selectedItem.Tag;
+                    id = selectedSuggestedItem == null ? (int)selectedItem.Tag : (int)selectedSuggestedItem.Tag;
 
                     if (newFolderInput.Text != "")
                     {
@@ -458,20 +463,34 @@ namespace LiBeo
                 SelectFolder targetFolderWindow = new SelectFolder() { Title = "Ordner auswählen, in den der/die Ordner verschoben werden" };
                 if(targetFolderWindow.ShowDialog() == false && !targetFolderWindow.Canceled)
                 {
-                    SQLiteCommand dbCmd = new SQLiteCommand(ThisAddIn.DbConn);
                     foreach (int folderToMoveId in foldersToMoveWindow.SelectedFolderIds)
                     {
                         Outlook.Folder folderToMove = GetFolderFromPath(ThisAddIn.Structure.GetPath(ThisAddIn.DbConn, folderToMoveId));
                         Outlook.Folder targetFolder = GetFolderFromPath(targetFolderWindow.SelectedFolderPath);
                         folderToMove.MoveTo(targetFolder);
 
-                        dbCmd.CommandText = "UPDATE folders SET parent_id=@parent_id WHERE id=@id";
-                        dbCmd.Parameters.AddWithValue("@parent_id", targetFolderWindow.SelectedFolderId);
-                        dbCmd.Parameters.AddWithValue("@id", folderToMoveId);
-                        dbCmd.ExecuteNonQuery();
+                        ThisAddIn.Structure.MoveFolder(ThisAddIn.DbConn, folderToMoveId, targetFolderWindow.SelectedFolderId);
                     }
                 }
             }
+        }
+
+        public static void SearchFolder()
+        {
+            SearchFolderWindow window = new SearchFolderWindow();
+            window.Show();
+        }
+
+        private void searchInput_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            searchSuggestions.DisplaySearchSuggestions(searchInput.Text);
+            folderExplorer.Visibility = searchInput.Text == "" ? Visibility.Visible : Visibility.Collapsed;
+            searchSuggestions.Visibility = searchInput.Text == "" ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private void searchSuggestions_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            okButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         }
     }
 

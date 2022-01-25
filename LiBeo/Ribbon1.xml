@@ -38,6 +38,9 @@
 					<button id="MoveFolder"
 							label="Ordner verschieben"
 							onAction="MoveFolder"/>
+					<button id="SearchFolder"
+							label="Ordner suchen"
+							onAction="SearchFolder"/>
 				</group>
 				<group id="InfoGroup"
 						 label="Einstellungen">

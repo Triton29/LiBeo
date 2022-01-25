@@ -181,6 +181,41 @@ namespace LiBeo
         }
 
         /// <summary>
+        /// Moves a folder in the folder structure
+        /// </summary>
+        /// <param name="conn">SQLite database connection</param>
+        /// <param name="folderToMoveId">Id of the folder that should be moved</param>
+        /// <param name="targetFolderId">Id of the target folder</param>
+        public void MoveFolder(SQLiteConnection conn, int folderToMoveId, int targetFolderId)
+        {
+            SQLiteCommand cmd = new SQLiteCommand(conn);
+            cmd.CommandText = "UPDATE folders SET parent_id=@parent_id WHERE id=@id";
+            cmd.Parameters.AddWithValue("@id", folderToMoveId);
+            cmd.Parameters.AddWithValue("@parent_id", targetFolderId);
+            cmd.ExecuteNonQuery();
+        }
+
+        public List<int> SearchFolder(SQLiteConnection conn, string patternRaw)
+        {
+            SQLiteCommand cmd = new SQLiteCommand(conn);
+            string patternStrict = patternRaw + "%";
+            string pattern = "%" + patternRaw + "%";
+            List<int> foundFolders = new List<int>();
+
+            cmd.CommandText = "SELECT id FROM folders WHERE name LIKE @pattern ORDER BY CASE WHEN name LIKE @pattern_strict THEN 0 ELSE 1 END";
+            cmd.Parameters.AddWithValue("@pattern", pattern);
+            cmd.Parameters.AddWithValue("@pattern_strict", patternStrict);
+            cmd.Prepare();
+            SQLiteDataReader dataReader = cmd.ExecuteReader();
+            while(dataReader.Read())
+            {
+                foundFolders.Add(dataReader.GetInt32(0));
+            }
+
+            return foundFolders;
+        }
+
+        /// <summary>
         /// Gets the path of a folder in a folder structure saved in a database
         /// </summary>
         /// <param name="conn">SQLite database connection</param>

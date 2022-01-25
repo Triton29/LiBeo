@@ -198,9 +198,23 @@ namespace LiBeo
             foreach(string f in path.Split('\\'))
             {
                 if(f != "")
-                    folder = (Outlook.Folder) folder.Folders[f];
+                {
+                    try
+                    {
+                        folder = (Outlook.Folder)folder.Folders[f];
+                    }
+                    catch (System.Runtime.InteropServices.COMException)
+                    {
+                        return null;
+                    }
+                }
             }
             return folder;
+        }
+
+        public static Outlook.Folder GetFolderFromPath(List<string> path)
+        {
+            return GetFolderFromPath(string.Join("\\", path));
         }
 
         /// <summary>
