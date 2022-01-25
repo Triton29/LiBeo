@@ -18,7 +18,7 @@ namespace LiBeo
 {
     public partial class ThisAddIn
     {
-        public static string Version = "1.1";
+        public static string Version = "1.2";
         public static string DbPath { get; set; }
         public static Outlook.Folder RootFolder { get; set; }
         public static string EmailAddress { get; set; }
