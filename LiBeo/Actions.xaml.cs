@@ -353,7 +353,7 @@ namespace LiBeo
             {
                 trayFolder = ThisAddIn.GetFolderFromPath(ThisAddIn.GetSetting<string>("tray_path"));
             }
-            catch
+            catch (System.Runtime.InteropServices.COMException)
             {
                 MessageBox.Show("Der Ablage-Ordner exestiert nicht! Ändern Sie ihn in den Add-In-Einstellungen.", 
                     "Ablage-Ordner nicht gefunden", 
@@ -365,13 +365,25 @@ namespace LiBeo
             Outlook.Folder currentFolder = trayFolder;
             foreach(Outlook.MailItem mail in ThisAddIn.GetSelectedMails())
             {
+                int yearOutgoing = mail.CreationTime.Year != 0 ? mail.CreationTime.Year : mail.SentOn.Year;
+                int yearIncoming = mail.SentOn.Year;
+                MessageBox.Show(yearOutgoing + ", " + yearIncoming);
+                if(yearOutgoing == 4051 || yearIncoming == 4051)
+                {
+                    MessageBox.Show("Bei einer der ausgewählten E-Mails wurde kein Datum gefunden.",
+                    "E-Mail ohne Datum",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                    return;
+                }
+
                 if(mail.SenderEmailAddress.ToLower() == ThisAddIn.EmailAddress.ToLower() &&
                     mail.SenderEmailAddress.ToLower() != mail.Recipients[1].Address.ToLower())   // if mail is outgoing
                 {
-                    if(IsInFolder(currentFolder, mail.CreationTime.Year.ToString()))
-                        currentFolder = (Outlook.Folder)currentFolder.Folders[mail.CreationTime.Year.ToString()];
+                    if(IsInFolder(currentFolder, yearOutgoing.ToString()))
+                        currentFolder = (Outlook.Folder)currentFolder.Folders[yearOutgoing.ToString()];
                     else
-                        currentFolder = (Outlook.Folder)currentFolder.Folders.Add(mail.CreationTime.Year.ToString());
+                        currentFolder = (Outlook.Folder)currentFolder.Folders.Add(yearOutgoing.ToString());
 
                     if (IsInFolder(currentFolder, outgoingFolder))
                         currentFolder = (Outlook.Folder)currentFolder.Folders[outgoingFolder];
@@ -389,10 +401,10 @@ namespace LiBeo
                 }
                 else    // if mail is incoming
                 {
-                    if (IsInFolder(currentFolder, mail.ReceivedTime.Year.ToString()))
-                        currentFolder = (Outlook.Folder)currentFolder.Folders[mail.ReceivedTime.Year.ToString()];
+                    if (IsInFolder(currentFolder, yearIncoming.ToString()))
+                        currentFolder = (Outlook.Folder)currentFolder.Folders[yearIncoming.ToString()];
                     else
-                        currentFolder = (Outlook.Folder)currentFolder.Folders.Add(mail.ReceivedTime.Year.ToString());
+                        currentFolder = (Outlook.Folder)currentFolder.Folders.Add(yearIncoming.ToString());
 
                     if (IsInFolder(currentFolder, incomingFolder))
                         currentFolder = (Outlook.Folder)currentFolder.Folders[incomingFolder];
