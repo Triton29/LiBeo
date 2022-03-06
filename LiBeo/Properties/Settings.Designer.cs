@@ -22,17 +22,5 @@ namespace LiBeo.Properties {
                 return defaultInstance;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("data.db")]
-        public string DbPath {
-            get {
-                return ((string)(this["DbPath"]));
-            }
-            set {
-                this["DbPath"] = value;
-            }
-        }
     }
 }

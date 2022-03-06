@@ -19,6 +19,7 @@ namespace LiBeo
     public partial class ThisAddIn
     {
         public static string Version = "1.2";
+        public static string DbPathTxt = AppDomain.CurrentDomain.BaseDirectory + "db_path.txt";
         public static string DbPath { get; set; }
         public static Outlook.Folder RootFolder { get; set; }
         public static string EmailAddress { get; set; }
@@ -66,7 +67,8 @@ namespace LiBeo
             waitThread.SetApartmentState(ApartmentState.STA);
             waitThread.IsBackground = true;
             waitThread.Start();
-            Thread.Sleep(40);
+            while (waitWindow == null)
+                Thread.Sleep(10);
             return waitWindow;
         }
         /// <summary>
@@ -76,17 +78,14 @@ namespace LiBeo
         /// <returns>If the wait window could be closed</returns>
         public static bool CloseWaitWindow(WaitWindow waitWindow)
         {
-            if (waitWindow == null)
-                return false;
-            try
+            for (int i = 0; waitWindow == null; i++)
             {
-                waitWindow.Dispatcher.Invoke(() => { waitWindow.Close(); });
-                return true;
+                Thread.Sleep(10);
+                if (i > 1000)
+                    return false;
             }
-            catch
-            {
-                return false; 
-            }
+            waitWindow.Dispatcher.Invoke(() => { waitWindow.Close(); });
+            return true;
         }
         #endregion
 
@@ -97,8 +96,8 @@ namespace LiBeo
         {
             try
             {
-            // initialize properties
-                DbPath = Properties.Settings.Default.DbPath;
+                // initialize properties
+                DbPath = GetDbPath();
                 RootFolder = (Outlook.Folder)Application.ActiveExplorer().Session.DefaultStore.GetRootFolder();
                 EmailAddress = Application.ActiveExplorer().Session.CurrentUser.Address;
                 Name = Application.Session.Accounts[1].DisplayName;
@@ -132,6 +131,32 @@ namespace LiBeo
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
         {
             DbConn.Close();
+        }
+
+        /// <summary>
+        /// Gets the database path out of the DbPathTxt-file
+        /// </summary>
+        /// <returns>The database path</returns>
+        public static String GetDbPath()
+        {
+            try
+            {
+                return System.IO.File.ReadAllText(DbPathTxt);
+            }
+            catch (System.IO.FileNotFoundException)
+            {
+                SetDbPath("data.db");
+                return "data.db";
+            }
+        }
+
+        /// <summary>
+        /// Sets the database path to the DbPathTxt-file
+        /// </summary>
+        /// <param name="path">The new database path</param>
+        public static void SetDbPath (string path)
+        {
+            System.IO.File.WriteAllText(DbPathTxt, path);
         }
 
         /// <summary>
@@ -272,7 +297,7 @@ namespace LiBeo
                 }
                 else
                 {
-                    return (T)Convert.ChangeType(dataReader.GetInt32(0), typeof(T));
+                    return (T) Convert.ChangeType(dataReader.GetInt32(0), typeof(T));
                 }
             }
             return default(T);

@@ -493,6 +493,11 @@ namespace LiBeo
             window.Show();
         }
 
+        public static void RenameFolder()
+        {
+
+        }
+
         private void searchInput_TextChanged(object sender, TextChangedEventArgs e)
         {
             searchSuggestions.DisplaySearchSuggestions(searchInput.Text);

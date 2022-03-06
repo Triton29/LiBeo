@@ -29,7 +29,7 @@ namespace LiBeo
             // display current settings
             if (ThisAddIn.GetSetting<int>("sync_db") == 1)
                 syncDBCheckBox.IsChecked = true;
-            dbInput.Text = Properties.Settings.Default.DbPath;
+            dbInput.Text = ThisAddIn.GetDbPath();
             stopWordsInput.Text = ThisAddIn.GetSetting<string>("stop_words_path");
             trayPathInput.Text = ThisAddIn.GetSetting<string>("tray_path");
 
@@ -57,7 +57,7 @@ namespace LiBeo
                 ThisAddIn.SetSetting<int>("sync_db", 1);
             else
                 ThisAddIn.SetSetting<int>("sync_db", 0);
-            Properties.Settings.Default.DbPath = dbInput.Text;
+            ThisAddIn.SetDbPath(dbInput.Text);
             Properties.Settings.Default.Save();
             ThisAddIn.SetSetting<string>("stop_words_path", stopWordsInput.Text);
             ThisAddIn.SetSetting<string>("tray_path", trayPathInput.Text);

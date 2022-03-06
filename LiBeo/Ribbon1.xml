@@ -41,6 +41,9 @@
 					<button id="SearchFolder"
 							label="Ordner suchen"
 							onAction="SearchFolder"/>
+					<button id="RenameFolder"
+							label="Ordner umbenennen"
+							onAction="RenameFolder"/>
 				</group>
 				<group id="InfoGroup"
 						 label="Einstellungen">
