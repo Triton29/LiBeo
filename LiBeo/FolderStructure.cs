@@ -215,6 +215,16 @@ namespace LiBeo
             return foundFolders;
         }
 
+        public void RenameFolder(SQLiteConnection conn, int folderToRenameId, string newName)
+        {
+            SQLiteCommand cmd = new SQLiteCommand(conn);
+            cmd.CommandText = "UPDATE folders SET name=@name WHERE id=@id";
+            cmd.Parameters.AddWithValue("@name", newName);
+            cmd.Parameters.AddWithValue("@id", folderToRenameId);
+            cmd.Prepare();
+            cmd.ExecuteNonQuery();
+        }
+
         /// <summary>
         /// Gets the path of a folder in a folder structure saved in a database
         /// </summary>

@@ -101,6 +101,11 @@ namespace LiBeo
             Actions.SearchFolder();
         }
 
+        public void RenameFolder(Office.IRibbonControl control)
+        {
+            Actions.RenameFolder();
+        }
+
         /// <summary>
         /// Creates a window with settings for this Add-In
         /// </summary>

@@ -495,7 +495,8 @@ namespace LiBeo
 
         public static void RenameFolder()
         {
-
+            RenameFolderWindow window = new RenameFolderWindow();
+            window.Show();
         }
 
         private void searchInput_TextChanged(object sender, TextChangedEventArgs e)
