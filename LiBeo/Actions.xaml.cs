@@ -108,20 +108,42 @@ namespace LiBeo
         /// </summary>
         /// <param name="mails">The collection of mails to move</param>
         /// <param name="folderId">The id of the folder in the database</param>
-        private void MoveMails(IEnumerable<Outlook.MailItem> mails, int folderId)
+        private bool MoveMails(IEnumerable<Outlook.MailItem> mails, int folderId)
         {
-            List<string> path = ThisAddIn.Structure.GetPath(ThisAddIn.DbConn, folderId);
-            Outlook.Folder targetFolder = GetFolderFromPath(path);
             WaitWindow waitWindow = ThisAddIn.CreateWaitWindow();
-
-            foreach (Outlook.MailItem mail in mails)
+            try
             {
-                mail.Move(targetFolder);
-                // Learn tags if "learn nothing" check box is not checked
-                if (learnNothingCheckBox.IsChecked == false)
-                    LearnTags(mail.Subject, folderId);
+                List<string> path = ThisAddIn.Structure.GetPath(ThisAddIn.DbConn, folderId);
+                Outlook.Folder targetFolder = GetFolderFromPath(path);
+
+                foreach (Outlook.MailItem mail in mails)
+                {
+                    Outlook.Folder mailFolder = mail.Parent as Outlook.Folder;
+                    if(mailFolder.FullFolderPath == targetFolder.FullFolderPath)
+                    {
+                        ThisAddIn.CloseWaitWindow(waitWindow);
+                        MessageBox.Show("Die Mail(s) befinden sich bereits im ausgewählten Ordner",
+                            "Verschieben in denselben Ordner",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return false;
+                    }
+                    mail.Move(targetFolder);
+                    // Learn tags if "learn nothing" check box is not checked
+                    if (learnNothingCheckBox.IsChecked == false)
+                        LearnTags(mail.Subject, folderId);
+                }
+            }
+            catch(System.Runtime.InteropServices.COMException e) {
+                ThisAddIn.CloseWaitWindow(waitWindow);
+                MessageBox.Show(e.Message,
+                    "Mail(s) konnte(n) nicht verschoben werden",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return false;
             }
             ThisAddIn.CloseWaitWindow(waitWindow);
+            return true;
         }
 
         /// <summary>
@@ -130,84 +152,65 @@ namespace LiBeo
         private void OKButton_Click(object sender, RoutedEventArgs e)
         {
             int id = -1;
-            try
+            if (tabConrol.SelectedIndex == 0)    // automatic sort
             {
-                if (tabConrol.SelectedIndex == 0)    // automatic sort
+                ListViewItem selectedItem = (ListViewItem)autoSortList.SelectedItem;
+                if (selectedItem == null)
                 {
-                    ListViewItem selectedItem = (ListViewItem)autoSortList.SelectedItem;
-                    if (selectedItem == null)
-                    {
-                        return;
-                    }
-
-                    id = (int)selectedItem.Tag;
-
-                    MoveMails(ThisAddIn.GetSelectedMails(), id);
-
-                    this.Close();
+                    return;
                 }
-                if (tabConrol.SelectedIndex == 1)    // manual sort
+
+                id = (int)selectedItem.Tag;
+
+                if(MoveMails(ThisAddIn.GetSelectedMails(), id))
+                    this.Close();
+            }
+            if (tabConrol.SelectedIndex == 1)    // manual sort
+            {
+                TreeViewItem selectedItem = (TreeViewItem)folderExplorer.SelectedItem;
+                ListViewItem selectedSuggestedItem = (ListViewItem)searchSuggestions.SelectedItem;
+                if (selectedItem == null && selectedSuggestedItem == null)
                 {
-                    TreeViewItem selectedItem = (TreeViewItem)folderExplorer.SelectedItem;
-                    ListViewItem selectedSuggestedItem = (ListViewItem)searchSuggestions.SelectedItem;
-                    if (selectedItem == null && selectedSuggestedItem == null)
-                    {
-                        return;
-                    }
+                    return;
+                }
 
-                    id = selectedSuggestedItem == null ? (int)selectedItem.Tag : (int)selectedSuggestedItem.Tag;
+                id = selectedSuggestedItem == null ? (int)selectedItem.Tag : (int)selectedSuggestedItem.Tag;
 
-                    if (newFolderInput.Text != "")
+                if (newFolderInput.Text != "")
+                {
+                    Outlook.Folder newFolder = NewFolder(newFolderInput.Text, id);
+                    if (newFolder != null)
                     {
-                        Outlook.Folder newFolder = NewFolder(newFolderInput.Text, id);
-                        if (newFolder != null)
-                        {
-                            id = ThisAddIn.Structure.AddFolder(ThisAddIn.DbConn, newFolderInput.Text, id);
-                            MoveMails(ThisAddIn.GetSelectedMails(), id);
-                            this.Close();
-                        }
-                        else
-                        {
-                            MessageBox.Show("Ein Ordner mit diesem Namen exestiert bereits im ausgewählten Order.",
-                            "Ordner kann nicht erstellt werden",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Error);
-                        }
-                    }
-                    else
-                    {
+                        id = ThisAddIn.Structure.AddFolder(ThisAddIn.DbConn, newFolderInput.Text, id);
                         MoveMails(ThisAddIn.GetSelectedMails(), id);
                         this.Close();
                     }
-                }
-                if (tabConrol.SelectedIndex == 2)    // quick access list sort
-                {
-                    ListViewItem selectedItem = (ListViewItem)quickAccessList.SelectedItem;
-                    if (selectedItem == null)
+                    else
                     {
-                        return;
+                        MessageBox.Show("Ein Ordner mit diesem Namen exestiert bereits im ausgewählten Order.",
+                        "Ordner kann nicht erstellt werden",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
                     }
-
-                    id = (int)selectedItem.Tag;
-
-                    MoveMails(ThisAddIn.GetSelectedMails(), id);
-
-                    this.Close();
+                }
+                else
+                {
+                    if(MoveMails(ThisAddIn.GetSelectedMails(), id))
+                        this.Close();
                 }
             }
-            catch(System.Runtime.InteropServices.COMException)
+            if (tabConrol.SelectedIndex == 2)    // quick access list sort
             {
-                MessageBox.Show("Der ausgewählte Ordner exestiert nicht mehr. Bitte synchronisieren Sie die Ordnerstruktur.",
-                    "Ordner exestiert nicht mehr",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Beim Verschieben ist etwas schief gelaufen: " + ex,
-                    "E-Mails konnten nicht verschoben werden",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                ListViewItem selectedItem = (ListViewItem)quickAccessList.SelectedItem;
+                if (selectedItem == null)
+                {
+                    return;
+                }
+
+                id = (int)selectedItem.Tag;
+
+                if(MoveMails(ThisAddIn.GetSelectedMails(), id))
+                    this.Close();
             }
         }
 
@@ -367,7 +370,6 @@ namespace LiBeo
             {
                 int yearOutgoing = mail.CreationTime.Year != 0 ? mail.CreationTime.Year : mail.SentOn.Year;
                 int yearIncoming = mail.SentOn.Year;
-                MessageBox.Show(yearOutgoing + ", " + yearIncoming);
                 if(yearOutgoing == 4051 || yearIncoming == 4051)
                 {
                     MessageBox.Show("Bei einer der ausgewählten E-Mails wurde kein Datum gefunden.",
