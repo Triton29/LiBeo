@@ -477,6 +477,21 @@ namespace LiBeo
         {
             okButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         }
+
+        private void newFolderInput_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TreeViewItem selectedItem = (TreeViewItem)folderExplorer.SelectedItem;
+            ListViewItem selectedSuggestedItem = (ListViewItem)searchSuggestions.SelectedItem;
+            if ((selectedItem == null && selectedSuggestedItem == null) || newFolderInput.Text == "")
+            {
+                newFolderInfo.Content = "";
+                return;
+            }
+
+            int id = selectedSuggestedItem == null ? (int)selectedItem.Tag : (int)selectedSuggestedItem.Tag;
+            List<string> path = ThisAddIn.Structure.GetPath(ThisAddIn.DbConn, id);
+            newFolderInfo.Content = string.Join("\\", path) + "\\" + newFolderInput.Text;
+        }
     }
 
     /// <summary>
