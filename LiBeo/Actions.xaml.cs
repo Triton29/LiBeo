@@ -348,9 +348,6 @@ namespace LiBeo
         /// </summary>
         public static void MoveToTray()
         {
-            string outgoingFolder = "Gesendet";
-            string incomingFolder = "Empfangen";
-
             Outlook.Folder trayFolder;
             try     // check if tray path exists
             {
@@ -368,9 +365,8 @@ namespace LiBeo
             Outlook.Folder currentFolder = trayFolder;
             foreach(Outlook.MailItem mail in ThisAddIn.GetSelectedMails())
             {
-                int yearOutgoing = mail.CreationTime.Year != 0 ? mail.CreationTime.Year : mail.SentOn.Year;
-                int yearIncoming = mail.SentOn.Year;
-                if(yearOutgoing == 4051 || yearIncoming == 4051)
+                int year = mail.SentOn.Year;
+                if(year == 4051)
                 {
                     MessageBox.Show("Bei einer der ausgewählten E-Mails wurde kein Datum gefunden.",
                     "E-Mail ohne Datum",
@@ -379,50 +375,19 @@ namespace LiBeo
                     return;
                 }
 
-                if(mail.SenderEmailAddress.ToLower() == ThisAddIn.EmailAddress.ToLower() &&
-                    mail.SenderEmailAddress.ToLower() != mail.Recipients[1].Address.ToLower())   // if mail is outgoing
+                if (IsInFolder(currentFolder, year.ToString()))
+                    currentFolder = (Outlook.Folder)currentFolder.Folders[year.ToString()];
+                else
+                    currentFolder = (Outlook.Folder)currentFolder.Folders.Add(year.ToString());
+
+                try
                 {
-                    if(IsInFolder(currentFolder, yearOutgoing.ToString()))
-                        currentFolder = (Outlook.Folder)currentFolder.Folders[yearOutgoing.ToString()];
-                    else
-                        currentFolder = (Outlook.Folder)currentFolder.Folders.Add(yearOutgoing.ToString());
-
-                    if (IsInFolder(currentFolder, outgoingFolder))
-                        currentFolder = (Outlook.Folder)currentFolder.Folders[outgoingFolder];
-                    else
-                        currentFolder = (Outlook.Folder)currentFolder.Folders.Add(outgoingFolder);
-
-                    try
-                    {
-                        mail.Move(currentFolder);
-                    }
-                    catch
-                    {
-                        return;
-                    }
+                    mail.Move(currentFolder);
                 }
-                else    // if mail is incoming
+                catch
                 {
-                    if (IsInFolder(currentFolder, yearIncoming.ToString()))
-                        currentFolder = (Outlook.Folder)currentFolder.Folders[yearIncoming.ToString()];
-                    else
-                        currentFolder = (Outlook.Folder)currentFolder.Folders.Add(yearIncoming.ToString());
-
-                    if (IsInFolder(currentFolder, incomingFolder))
-                        currentFolder = (Outlook.Folder)currentFolder.Folders[incomingFolder];
-                    else
-                        currentFolder = (Outlook.Folder)currentFolder.Folders.Add(incomingFolder);
-
-                    try
-                    {
-                        mail.Move(currentFolder);
-                    }
-                    catch
-                    {
-                        return;
-                    }
+                    return;
                 }
-                currentFolder = trayFolder;
             }
         }
 
