@@ -32,6 +32,7 @@ namespace LiBeo
             dbInput.Text = ThisAddIn.GetDbPath();
             stopWordsInput.Text = ThisAddIn.GetSetting<string>("stop_words_path");
             trayPathInput.Text = ThisAddIn.GetSetting<string>("tray_path");
+            historyLimitInput.Text = ThisAddIn.GetSetting<int>("history_limit").ToString();
 
             // add images
             dbButton.Content = new Image
@@ -53,7 +54,21 @@ namespace LiBeo
         /// </summary>
         private void OKButton_Click(object sender, RoutedEventArgs e)
         {
-            if(syncDBCheckBox.IsChecked == true)
+            try
+            {
+                int historyLimit = Int32.Parse(historyLimitInput.Text);
+                if (historyLimit < 0) throw new FormatException();
+                ThisAddIn.SetSetting<int>("history_limit", historyLimit);
+            }
+            catch (FormatException)
+            {
+                System.Windows.MessageBox.Show("Das History Limit muss eine positive Ganzzahl sein",
+                        "Ungültige Eingabe",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                return;
+            }
+            if (syncDBCheckBox.IsChecked == true)
                 ThisAddIn.SetSetting<int>("sync_db", 1);
             else
                 ThisAddIn.SetSetting<int>("sync_db", 0);

@@ -35,10 +35,10 @@ namespace LiBeo
         {
             SQLiteCommand cmd = new SQLiteCommand(conn);
 
-            // create a table if it does not exist
+            // create tables if it does not exist
             cmd.CommandText = 
                 "CREATE TABLE IF NOT EXISTS folders (" +
-                "name varchar(255), id INTEGER PRIMARY KEY AUTOINCREMENT, parent_id int, got_deleted bit, UNIQUE(name, parent_id))";
+                "name varchar(255), id INTEGER PRIMARY KEY AUTOINCREMENT, parent_id int, got_deleted bit, last_move DATETIME, UNIQUE(name, parent_id))";
             cmd.ExecuteNonQuery();
 
             // prepare for delete check
@@ -252,6 +252,15 @@ namespace LiBeo
             }
 
             return path;
+        }
+
+        public void AddToHistory(SQLiteConnection conn, int folderId)
+        {
+            SQLiteCommand cmd = new SQLiteCommand(conn);
+            cmd.CommandText = "UPDATE folders SET last_move=datetime('now') WHERE id=@id";
+            cmd.Parameters.AddWithValue("@id", folderId);
+            cmd.Prepare();
+            cmd.ExecuteNonQuery();
         }
     }
 }

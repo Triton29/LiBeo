@@ -274,6 +274,8 @@ namespace LiBeo
             dbCmd.ExecuteNonQuery();
             dbCmd.CommandText = "INSERT OR IGNORE INTO settings (name, value_int, value_str) VALUES ('tray_path', -1, '\\Ablage')";
             dbCmd.ExecuteNonQuery();
+            dbCmd.CommandText = "INSERT OR IGNORE INTO settings (name, value_int) VALUES ('history_limit', 10)";
+            dbCmd.ExecuteNonQuery();
         }
 
         /// <summary>

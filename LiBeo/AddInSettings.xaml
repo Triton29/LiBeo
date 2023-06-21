@@ -49,6 +49,12 @@
                          VerticalContentAlignment="Center"
                          DockPanel.Dock="Left"/>
             </DockPanel>
+            <DockPanel Margin="0 5">
+                <Label Width="100">History Limit</Label>
+                <TextBox x:Name="historyLimitInput"
+                         VerticalContentAlignment="Center"
+                         DockPanel.Dock="Left"/>
+            </DockPanel>
             <Button x:Name="quickAccessListButton"
                     Click="quickAccessListButton_Click"
                     HorizontalAlignment="Left"

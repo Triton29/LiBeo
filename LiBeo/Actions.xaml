@@ -59,6 +59,16 @@
                               BorderThickness="0"/>
                 </StackPanel>
             </TabItem>
+            <TabItem Header="History">
+                <StackPanel>
+                    <Label x:Name="historyListEmpty"
+                           HorizontalAlignment="Center"
+                           Foreground="DarkGray"/>
+                    <ListView x:Name="historyList"
+                              MaxHeight="300"
+                              BorderThickness="0"/>
+                </StackPanel>
+            </TabItem>
             <TabItem Header="In Ablage verschieben"/>
         </TabControl>
         <CheckBox x:Name="learnNothingCheckBox"

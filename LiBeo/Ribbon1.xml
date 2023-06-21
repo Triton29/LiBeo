@@ -21,6 +21,11 @@
 							size="large"
 							onAction="CreateDir_Click"
 							imageMso="SortSelectionMenu"/>
+          <button id="HistoryList"
+							label="History"
+							size="large"
+							onAction="History_Click"
+							imageMso="DateAndTimeInsert"/>
 					<button id="MoveToTray"
 							label="In Ablage verschieben"
 							size="large"

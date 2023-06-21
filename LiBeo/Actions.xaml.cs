@@ -59,6 +59,13 @@ namespace LiBeo
                 quickAccessListEmpty.Content = "Keine Elemente in der Schenllzugriffsliste";
             }
 
+            // display history list
+            DisplayHistoryList(historyList);
+            if (historyList.Items.Count == 0)
+            {
+                historyListEmpty.Content = "Keine Elemente in der History";
+            }
+
             IEnumerable<Outlook.MailItem> selectedMails;
             try
             {
@@ -132,6 +139,7 @@ namespace LiBeo
                     // Learn tags if "learn nothing" check box is not checked
                     if (learnNothingCheckBox.IsChecked == false)
                         LearnTags(mail.Subject, folderId);
+                    ThisAddIn.Structure.AddToHistory(ThisAddIn.DbConn, folderId);
                 }
             }
             catch(System.Runtime.InteropServices.COMException e) {
@@ -199,9 +207,9 @@ namespace LiBeo
                         this.Close();
                 }
             }
-            if (tabConrol.SelectedIndex == 2)    // quick access list sort
+            if (tabConrol.SelectedIndex == 2 || tabConrol.SelectedIndex == 3)    // quick access list / history list sort
             {
-                ListViewItem selectedItem = (ListViewItem)quickAccessList.SelectedItem;
+                ListViewItem selectedItem = tabConrol.SelectedIndex == 2 ? (ListViewItem)quickAccessList.SelectedItem : (ListViewItem)historyList.SelectedItem;
                 if (selectedItem == null)
                 {
                     return;
@@ -238,7 +246,7 @@ namespace LiBeo
         /// </summary>
         private void tabConrol_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if(tabConrol.SelectedIndex == 3)
+            if(tabConrol.SelectedIndex == 4)
             {
                 MoveToTray();
                 this.Close();
@@ -425,6 +433,28 @@ namespace LiBeo
                 ListViewItem item = new ListViewItem() 
                 {
                     Content = pathItems > 1 ? path[pathItems - 2] + "\\" + path[pathItems - 1] : path[pathItems - 1], 
+                    Tag = id
+                };
+                list.Items.Add(item);
+            }
+        }
+
+        public static void DisplayHistoryList(ListView list)
+        {
+            SQLiteCommand dbCmd = new SQLiteCommand(ThisAddIn.DbConn);
+
+            dbCmd.CommandText = "SELECT id FROM folders WHERE last_move NOT NULL ORDER BY last_move DESC LIMIT @limit";
+            dbCmd.Parameters.AddWithValue("@limit", ThisAddIn.GetSetting<int>("history_limit"));
+            dbCmd.Prepare();
+            SQLiteDataReader dataReader = dbCmd.ExecuteReader();
+            while (dataReader.Read())
+            {
+                int id = dataReader.GetInt32(0);
+                List<string> path = ThisAddIn.Structure.GetPath(ThisAddIn.DbConn, id);
+                int pathItems = path.Count();
+                ListViewItem item = new ListViewItem()
+                {
+                    Content = pathItems > 1 ? path[pathItems - 2] + "\\" + path[pathItems - 1] : path[pathItems - 1],
                     Tag = id
                 };
                 list.Items.Add(item);

@@ -60,6 +60,14 @@ namespace LiBeo
             actionsForm.quickAccessList.TabIndex = 0;
         }
 
+        public void History_Click(Office.IRibbonControl control)
+        {
+            Actions actionsForm = new Actions();
+            actionsForm.Show();
+            actionsForm.tabConrol.SelectedIndex = 3;
+            actionsForm.historyList.TabIndex = 0;
+        }
+
         /// <summary>
         /// Moves the selected mails to the tray
         /// </summary>
