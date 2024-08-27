@@ -21,7 +21,7 @@ namespace LiBeo
     public partial class MultiSelectFolder : Window
     {
         public List<int> PreSelectedFolderIds = new List<int>();
-        public List<int> SelectedFolderIds = new List<int>();
+        public HashSet<int> SelectedFolderIds = new HashSet<int>();
         public bool Canceled = true;
 
         /// <summary>
@@ -50,6 +50,15 @@ namespace LiBeo
         /// </summary>
         private void okButton_Click(object sender, RoutedEventArgs e)
         {
+            var selectedSuggestedItems = searchSuggestions.SelectedItems;
+            if(selectedSuggestedItems != null)
+            {
+                foreach(var item in selectedSuggestedItems)
+                {
+                    SelectedFolderIds.Add((int) ((ListViewItem)item).Tag);
+                }
+            }
+            
             foreach (CheckBox checkBox in ThisAddIn.GetLogicalChildren<CheckBox>(folderExplorer))
             {
                 if(checkBox.IsChecked == true)
@@ -59,8 +68,11 @@ namespace LiBeo
                 }
             }
 
-            Canceled = false;
-            this.Close();
+            if(SelectedFolderIds.Count > 0)
+            {
+                Canceled = false;
+                this.Close();
+            }
         }
 
         /// <summary>
@@ -97,6 +109,18 @@ namespace LiBeo
                     checkBox.IsChecked = true;
                 }
             }
+        }
+
+        private void searchInput_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            searchSuggestions.DisplaySearchSuggestions(searchInput.Text);
+            folderExplorer.Visibility = searchInput.Text == "" ? Visibility.Visible : Visibility.Collapsed;
+            searchSuggestions.Visibility = searchInput.Text == "" ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private void searchSuggestions_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+
         }
     }
 }

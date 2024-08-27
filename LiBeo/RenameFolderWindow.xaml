@@ -25,10 +25,10 @@
         </DockPanel>
         <TreeView x:Name="folderExplorer" 
                               MaxHeight="300"
-                              BorderThickness="0"
                               HorizontalAlignment="Stretch"/>
         <local:FolderList x:Name="searchSuggestions"
-                                      MouseDoubleClick="searchSuggestions_MouseDoubleClick"/>
+                          MouseDoubleClick="searchSuggestions_MouseDoubleClick"
+                          Visibility="Collapsed"/>
 
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Right"

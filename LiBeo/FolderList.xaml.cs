@@ -20,12 +20,20 @@ namespace LiBeo
     /// </summary>
     public partial class FolderList : UserControl
     {
-        public object SelectedItem { get; set; }
+        public System.Collections.IList SelectedItems { get; set; }
+        public object SelectedItem
+        {
+            get
+            {
+                return SelectedItems != null ? SelectedItems[0] : null;
+            }
+        }
 
         public FolderList()
         {
             InitializeComponent();
         }
+
 
         /// <summary>
         /// Displays folder search suggestions for a pattern
@@ -75,7 +83,7 @@ namespace LiBeo
         /// <param name="sender"></param>
         private void list_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            this.SelectedItem = list.SelectedItem;
+            this.SelectedItems = list.SelectedItems;
         }
     }
 }

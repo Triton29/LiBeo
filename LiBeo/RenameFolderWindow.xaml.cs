@@ -26,10 +26,6 @@ namespace LiBeo
 
             // display folder structure
             ThisAddIn.Structure.DisplayInTreeView(ThisAddIn.DbConn, folderExplorer, ThisAddIn.Name, false);
-
-            // hide search suggestion list
-            searchSuggestions.Visibility = Visibility.Collapsed;
-            searchSuggestions.list.BorderThickness = new Thickness(0);
         }
 
         private void Window_KeyDown(object sender, KeyEventArgs e)

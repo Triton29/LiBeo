@@ -20,8 +20,8 @@ namespace LiBeo
     /// </summary>
     public partial class SelectFolder : Window
     {
-        public int SelectedFolderId;
-        public List<string> SelectedFolderPath;
+        public int SelectedFolderId = -1;
+        public List<string> SelectedFolderPath = null;
         public bool Canceled = true;
 
         public SelectFolder()
@@ -39,8 +39,16 @@ namespace LiBeo
         /// </summary>
         private void okButton_Click(object sender, RoutedEventArgs e)
         {
-            Canceled = false;
-            this.Close();
+            if(searchSuggestions.SelectedItem != null)
+            {
+                SelectedFolderId = (int)((ListViewItem)searchSuggestions.SelectedItem).Tag;
+                SelectedFolderPath = ThisAddIn.Structure.GetPath(ThisAddIn.DbConn, SelectedFolderId);
+            }
+            if(SelectedFolderId != -1 && SelectedFolderPath != null)
+            {
+                Canceled = false;
+                this.Close();
+            }
         }
 
         /// <summary>
@@ -71,6 +79,18 @@ namespace LiBeo
             int id = (int)((TreeViewItem)folderExplorer.SelectedItem).Tag;
             SelectedFolderId = id;
             SelectedFolderPath = ThisAddIn.Structure.GetPath(ThisAddIn.DbConn, id);
+        }
+
+        private void searchInput_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            searchSuggestions.DisplaySearchSuggestions(searchInput.Text);
+            folderExplorer.Visibility = searchInput.Text == "" ? Visibility.Visible : Visibility.Collapsed;
+            searchSuggestions.Visibility = searchInput.Text == "" ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private void searchSuggestions_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            okButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         }
     }
 }

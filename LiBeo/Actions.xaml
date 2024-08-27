@@ -46,7 +46,8 @@
                               BorderThickness="0"
                               HorizontalAlignment="Stretch"/>
                     <local:FolderList x:Name="searchSuggestions"
-                                      MouseDoubleClick="searchSuggestions_MouseDoubleClick"/>
+                                      MouseDoubleClick="searchSuggestions_MouseDoubleClick"
+                                      Visibility="Collapsed"/>
                 </StackPanel>
             </TabItem>
             <TabItem Header="Mit Schnellzugriffsliste einsortieren">
@@ -71,10 +72,17 @@
             </TabItem>
             <TabItem Header="In Ablage verschieben"/>
         </TabControl>
-        <CheckBox x:Name="learnNothingCheckBox"
-                      Margin="0 10 0 0">
-            Nichts lernen
-        </CheckBox>
+        <StackPanel Orientation="Horizontal"
+                    Margin="0 10 0 0">
+            <CheckBox x:Name="learnNothingCheckBox"
+                      Margin="0 0 10 0">
+                Nichts lernen
+            </CheckBox>
+            <CheckBox x:Name="copyCheckBox"
+                      Margin="0 0 0 0">
+                Kopieren
+            </CheckBox>
+        </StackPanel>
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Margin="0 10 0 0">

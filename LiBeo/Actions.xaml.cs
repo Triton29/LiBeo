@@ -48,9 +48,8 @@ namespace LiBeo
             // display folder structure
             ThisAddIn.Structure.DisplayInTreeView(ThisAddIn.DbConn, folderExplorer, ThisAddIn.Name, false);
 
-            // hide search suggestion list
-            searchSuggestions.Visibility = Visibility.Collapsed;
             searchSuggestions.list.BorderThickness = new Thickness(0);
+            searchSuggestions.list.SelectionMode = SelectionMode.Single;
 
             // display quick access list
             DisplayQuickAccessList(quickAccessList);
@@ -135,7 +134,14 @@ namespace LiBeo
                             MessageBoxImage.Warning);
                         return false;
                     }
-                    mail.Move(targetFolder);
+                    if(copyCheckBox.IsChecked == false)
+                    {
+                        mail.Move(targetFolder);
+                    }
+                    else
+                    {
+                        ((Outlook.MailItem)mail.Copy()).Move(targetFolder);
+                    }
                     // Learn tags if "learn nothing" check box is not checked
                     if (learnNothingCheckBox.IsChecked == false)
                         LearnTags(mail.Subject, folderId);
@@ -356,12 +362,8 @@ namespace LiBeo
         /// </summary>
         public static void MoveToTray()
         {
-            Outlook.Folder trayFolder;
-            try     // check if tray path exists
-            {
-                trayFolder = ThisAddIn.GetFolderFromPath(ThisAddIn.GetSetting<string>("tray_path"));
-            }
-            catch (System.Runtime.InteropServices.COMException)
+            Outlook.Folder trayFolder = ThisAddIn.GetFolderFromPath(ThisAddIn.GetSetting<string>("tray_path")); ;
+            if(trayFolder == null)
             {
                 MessageBox.Show("Der Ablage-Ordner exestiert nicht! Ändern Sie ihn in den Add-In-Einstellungen.", 
                     "Ablage-Ordner nicht gefunden", 
@@ -370,7 +372,6 @@ namespace LiBeo
                 return;
             }
 
-            Outlook.Folder currentFolder = trayFolder;
             foreach(Outlook.MailItem mail in ThisAddIn.GetSelectedMails())
             {
                 int year = mail.SentOn.Year;
@@ -383,10 +384,11 @@ namespace LiBeo
                     return;
                 }
 
-                if (IsInFolder(currentFolder, year.ToString()))
-                    currentFolder = (Outlook.Folder)currentFolder.Folders[year.ToString()];
+                Outlook.Folder currentFolder;
+                if (IsInFolder(trayFolder, year.ToString()))
+                    currentFolder = (Outlook.Folder)trayFolder.Folders[year.ToString()];
                 else
-                    currentFolder = (Outlook.Folder)currentFolder.Folders.Add(year.ToString());
+                    currentFolder = (Outlook.Folder)trayFolder.Folders.Add(year.ToString());
 
                 try
                 {
